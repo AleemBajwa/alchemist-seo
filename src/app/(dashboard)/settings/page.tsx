@@ -1,27 +1,59 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Check, Key } from "lucide-react";
+import { Loader2, Check, Key, Palette } from "lucide-react";
 
 export default function SettingsPage() {
   const [dataforseoLogin, setDataforseoLogin] = useState("");
   const [dataforseoPassword, setDataforseoPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [wlSaving, setWlSaving] = useState(false);
+  const [wlSaved, setWlSaved] = useState(false);
 
   useEffect(() => {
-    fetch("/api/settings/keys")
-      .then((r) => r.json())
-      .then((d) => {
-        // We don't return actual credentials for security
-        if (d.keys?.find((k: { provider: string }) => k.provider === "dataforseo")?.hasCredentials) {
-          setDataforseoLogin("__configured__");
-          setDataforseoPassword("__configured__");
-        }
-      })
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/settings/keys").then((r) => r.json()),
+      fetch("/api/settings/whitelabel").then((r) => r.json()),
+    ]).then(([keysData, wlData]) => {
+      if (keysData.keys?.find((k: { provider: string }) => k.provider === "dataforseo")?.hasCredentials) {
+        setDataforseoLogin("__configured__");
+        setDataforseoPassword("__configured__");
+      }
+      if (wlData.whiteLabel) {
+        setCompanyName(wlData.whiteLabel.companyName || "");
+        setLogoUrl(wlData.whiteLabel.logoUrl || "");
+        setPrimaryColor(wlData.whiteLabel.primaryColor || "");
+      }
+    }).finally(() => setLoading(false));
   }, []);
+
+  async function handleWhiteLabelSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setWlSaving(true);
+    setWlSaved(false);
+    try {
+      const res = await fetch("/api/settings/whitelabel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: companyName || undefined,
+          logoUrl: logoUrl || undefined,
+          primaryColor: primaryColor || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWlSaved(true);
+      }
+    } finally {
+      setWlSaving(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +156,75 @@ export default function SettingsPage() {
             </button>
             {saved && (
               <span className="text-sm text-emerald-500">Credentials saved</span>
+            )}
+          </div>
+        </form>
+
+        <form
+          onSubmit={handleWhiteLabelSubmit}
+          className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6"
+        >
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-violet-500/10 p-2">
+              <Palette className="h-5 w-5 text-violet-500" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-zinc-100">White Label</h2>
+              <p className="text-sm text-zinc-500">
+                Brand PDF reports with your company name and logo
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-sm text-zinc-500">Company name</label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Your Agency Name"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-zinc-900 px-4 py-2 text-zinc-100 placeholder:text-zinc-600"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-zinc-500">Logo URL</label>
+              <input
+                type="url"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://example.com/logo.png"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-zinc-900 px-4 py-2 text-zinc-100 placeholder:text-zinc-600"
+                disabled={loading}
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-zinc-500">Primary color (hex)</label>
+              <input
+                type="text"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                placeholder="#f97316"
+                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-zinc-900 px-4 py-2 text-zinc-100 placeholder:text-zinc-600"
+                disabled={loading}
+              />
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={wlSaving || loading}
+              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 font-medium text-white hover:bg-[var(--accent-muted)] disabled:opacity-50"
+            >
+              {wlSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : wlSaved ? (
+                <Check className="h-4 w-4" />
+              ) : null}
+              {wlSaving ? "Saving..." : wlSaved ? "Saved" : "Save"}
+            </button>
+            {wlSaved && (
+              <span className="text-sm text-emerald-500">White label saved</span>
             )}
           </div>
         </form>

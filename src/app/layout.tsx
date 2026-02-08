@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SEO Tools | Keyword Research, Site Audit & Rankings",
+  title: "AlChemist_SEO | Keyword Research, Site Audit & Rankings",
   description: "Professional SEO platform: keyword research, site audit, position tracking, backlinks.",
 };
 

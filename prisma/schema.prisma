@@ -9,15 +9,27 @@ datasource db {
 }
 
 model User {
-  id         String     @id @default(cuid())
-  clerkId    String     @unique
-  email      String
-  name       String?
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  projects   Project[]
-  apiKeys    UserApiKey[]
-  auditRuns  AuditRun[]
+  id              String           @id @default(cuid())
+  clerkId         String           @unique
+  email           String
+  name            String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  projects        Project[]
+  apiKeys         UserApiKey[]
+  auditRuns       AuditRun[]
+  whiteLabel      WhiteLabel?
+}
+
+model WhiteLabel {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String?
+  logoUrl     String?
+  primaryColor String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model UserApiKey {
@@ -58,26 +70,39 @@ model Keyword {
 }
 
 model TrackedKeyword {
-  id          String   @id @default(cuid())
-  keyword     String
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  position    Int?
-  url         String?
-  lastChecked DateTime?
-  createdAt   DateTime @default(now())
+  id             String           @id @default(cuid())
+  keyword        String
+  domain         String?
+  projectId      String
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  position       Int?
+  url            String?
+  lastChecked    DateTime?
+  createdAt      DateTime        @default(now())
+  positionHistory PositionHistory[]
+}
+
+model PositionHistory {
+  id               String         @id @default(cuid())
+  trackedKeywordId String
+  trackedKeyword   TrackedKeyword @relation(fields: [trackedKeywordId], references: [id], onDelete: Cascade)
+  position         Int?
+  url              String?
+  checkedAt        DateTime       @default(now())
 }
 
 model AuditRun {
-  id        String   @id @default(cuid())
-  url       String
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    String
-  score     Int
-  grade     String
-  issues    String
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  url         String
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String
+  score       Int
+  grade       String
+  issues      String
+  pagesCount  Int?     @default(1)
+  crawlType   String?  @default("single")
+  createdAt   DateTime @default(now())
 }

@@ -1,4 +1,4 @@
-# SEO Tools – Production-Ready Platform
+# AlChemist_SEO – Production-Ready Platform
 
 A Semrush-like SEO platform for your client. Keyword research, site audit, position tracking, backlinks analysis.
 

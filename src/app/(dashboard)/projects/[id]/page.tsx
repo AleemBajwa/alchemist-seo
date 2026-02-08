@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, FileSearch, Loader2 } from "lucide-react";
+import { ArrowLeft, Search, FileSearch, Loader2, BarChart3 } from "lucide-react";
 
 type Project = {
   id: string;
   name: string;
   domain: string;
   keywords: { keyword: string; volume: number | null; difficulty: number | null }[];
+  trackedKeywords?: {
+    id: string;
+    keyword: string;
+    domain: string | null;
+    position: number | null;
+    lastChecked: string | null;
+    positionHistory: { position: number | null; checkedAt: string }[];
+  }[];
 };
 
 export default function ProjectDetailPage() {
@@ -89,7 +97,46 @@ export default function ProjectDetailPage() {
             <p className="text-sm text-zinc-500">Audit this site</p>
           </div>
         </Link>
+        <Link
+          href={`/positions?projectId=${project.id}`}
+          className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-colors hover:border-zinc-600"
+        >
+          <div className="rounded-lg bg-blue-500/10 p-3">
+            <BarChart3 className="h-8 w-8 text-blue-500" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-zinc-100">Position Tracking</h3>
+            <p className="text-sm text-zinc-500">
+              {project.trackedKeywords?.length || 0} keywords tracked
+            </p>
+          </div>
+        </Link>
       </div>
+
+      {project.trackedKeywords && project.trackedKeywords.length > 0 && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
+          <h3 className="border-b border-[var(--border)] px-6 py-4 font-semibold text-zinc-100">
+            Tracked Keywords
+          </h3>
+          <div className="divide-y divide-[var(--border)]">
+            {project.trackedKeywords.map((tk) => (
+              <div key={tk.id} className="px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-zinc-200">{tk.keyword}</span>
+                  <span className="text-[var(--accent)] font-bold">
+                    #{tk.position ?? "—"}
+                  </span>
+                </div>
+                {tk.positionHistory.length > 0 && (
+                  <p className="mt-1 text-xs text-zinc-500">
+                    History: {tk.positionHistory.map((h) => `#${h.position ?? "—"}`).join(" → ")}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {project.keywords && project.keywords.length > 0 && (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">

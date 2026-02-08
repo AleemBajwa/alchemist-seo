@@ -1,15 +1,13 @@
-# SEO Tools – Client Handover
+# AlChemist_SEO – Client Handover
 
-**Delivered:** [Date]  
+**Delivered:** February 8, 2025  
 **Platform:** Professional SEO suite (keyword research, site audit, position tracking, backlinks)
 
 ---
 
 ## Live URL
 
-**https://[your-app].vercel.app**
-
-*(Replace with your actual Vercel URL after deployment)*
+**https://alchemist-seo.vercel.app**
 
 ---
 

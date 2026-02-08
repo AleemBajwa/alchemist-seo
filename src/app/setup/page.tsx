@@ -21,7 +21,7 @@ export default async function SetupPage() {
       <div className="mx-auto max-w-2xl space-y-10">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-zinc-100">
-            SEO Tools – Setup
+            AlChemist_SEO – Setup
           </h1>
           <p className="mt-2 text-zinc-500">
             Configure these services before delivering to your client.

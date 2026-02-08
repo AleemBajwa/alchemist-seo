@@ -1,12 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { BarChart3, Loader2, TrendingUp } from "lucide-react";
 
-export default function PositionsPage() {
+type Project = { id: string; name: string; domain: string };
+
+function PositionsContent() {
+  const searchParams = useSearchParams();
+  const projectIdParam = searchParams.get("projectId");
   const [keyword, setKeyword] = useState("");
   const [target, setTarget] = useState("");
+  const [projectId, setProjectId] = useState(projectIdParam || "");
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (projectIdParam) {
+      setProjectId(projectIdParam);
+      const proj = projects.find((p) => p.id === projectIdParam);
+      if (proj && !target) setTarget(proj.domain);
+    }
+  }, [projectIdParam, projects]);
+
+  useEffect(() => {
+    fetch("/api/projects")
+      .then((r) => r.json())
+      .then((d) => setProjects(d.projects || []))
+      .catch(() => setProjects([]));
+  }, []);
   const [result, setResult] = useState<{
     keyword: string;
     target: string;
@@ -31,6 +53,7 @@ export default function PositionsPage() {
         body: JSON.stringify({
           keyword: keyword.trim(),
           target: target.trim(),
+          projectId: projectId || undefined,
         }),
       });
       const data = await res.json();
@@ -86,6 +109,24 @@ export default function PositionsPage() {
               disabled={loading}
             />
           </div>
+          {projects.length > 0 && (
+            <div className="sm:col-span-2">
+              <label className="block text-sm text-zinc-500 mb-1">Track in project (optional)</label>
+              <select
+                value={projectId}
+                onChange={(e) => setProjectId(e.target.value)}
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] py-3 px-4 text-zinc-100"
+                disabled={loading}
+              >
+                <option value="">Don&apos;t track</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.domain})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
         <button
           type="submit"
@@ -169,5 +210,13 @@ export default function PositionsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function PositionsPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-zinc-500" /></div>}>
+      <PositionsContent />
+    </Suspense>
   );
 }

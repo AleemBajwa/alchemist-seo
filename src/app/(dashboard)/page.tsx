@@ -3,6 +3,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
 import { DashboardStats } from "@/components/DashboardStats";
+import { DashboardCharts } from "@/components/DashboardCharts";
 import Link from "next/link";
 
 export default async function DashboardPage() {
@@ -68,6 +69,8 @@ export default async function DashboardPage() {
       </div>
 
       <DashboardStats />
+
+      <DashboardCharts />
 
       {!hasApiKeys && (
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">

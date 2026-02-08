@@ -18,7 +18,14 @@ export async function GET(
     include: {
       projects: {
         where: { id },
-        include: { keywords: { orderBy: { createdAt: "desc" }, take: 50 } },
+        include: {
+          keywords: { orderBy: { createdAt: "desc" }, take: 50 },
+          trackedKeywords: {
+            include: {
+              positionHistory: { orderBy: { checkedAt: "desc" }, take: 30 },
+            },
+          },
+        },
       },
     },
   });

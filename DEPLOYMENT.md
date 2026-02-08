@@ -1,6 +1,6 @@
-# Deployment Guide – Client-Ready SEO Tools
+# Deployment Guide – Client-Ready AlChemist_SEO
 
-This guide covers deploying the SEO Tools platform for your client.
+This guide covers deploying the AlChemist_SEO platform for your client.
 
 ## Build requirements
 

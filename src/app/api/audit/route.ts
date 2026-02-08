@@ -2,167 +2,75 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { auditSinglePage, getGrade, type AuditIssue } from "@/lib/audit";
+import { getUrlsFromSitemap, discoverInternalLinks } from "@/lib/crawler";
 
 const schema = z.object({
   url: z.string().url(),
   projectId: z.string().optional(),
+  crawlType: z.enum(["single", "fullsite"]).optional().default("single"),
+  maxPages: z.number().min(1).max(100).optional().default(25),
 });
-
-type AuditIssue = {
-  type: "error" | "warning" | "info";
-  category: string;
-  message: string;
-  details?: string;
-};
-
-async function runAudit(url: string): Promise<{ score: number; issues: AuditIssue[] }> {
-  const issues: AuditIssue[] = [];
-  let score = 100;
-
-  try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; SEOAudit/1.0)",
-      },
-    });
-
-    const html = await response.text();
-
-    const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-    if (!titleMatch) {
-      issues.push({
-        type: "error",
-        category: "On-Page",
-        message: "Missing page title",
-        details: "Pages should have a unique, descriptive title tag.",
-      });
-      score -= 15;
-    } else {
-      const title = titleMatch[1].trim();
-      if (title.length < 30) {
-        issues.push({
-          type: "warning",
-          category: "On-Page",
-          message: "Title too short",
-          details: `Title is ${title.length} chars. Recommended: 50-60 characters.`,
-        });
-        score -= 5;
-      } else if (title.length > 60) {
-        issues.push({
-          type: "warning",
-          category: "On-Page",
-          message: "Title too long",
-          details: `Title is ${title.length} chars. May be truncated in SERPs.`,
-        });
-        score -= 5;
-      }
-    }
-
-    const metaDescMatch = html.match(
-      /<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i
-    );
-    if (!metaDescMatch) {
-      issues.push({
-        type: "warning",
-        category: "On-Page",
-        message: "Missing meta description",
-        details: "Add a meta description for better SERP snippets.",
-      });
-      score -= 10;
-    } else {
-      const desc = metaDescMatch[1].trim();
-      if (desc.length < 120) {
-        issues.push({
-          type: "info",
-          category: "On-Page",
-          message: "Meta description could be longer",
-          details: `Current: ${desc.length} chars. Recommended: 150-160.`,
-        });
-        score -= 3;
-      }
-    }
-
-    const h1Match = html.match(/<h1[^>]*>([^<]*)<\/h1>/i);
-    if (!h1Match) {
-      issues.push({
-        type: "warning",
-        category: "On-Page",
-        message: "Missing H1 heading",
-        details: "Pages should have exactly one H1 for structure.",
-      });
-      score -= 8;
-    }
-
-    const canonicalMatch = html.match(
-      /<link[^>]*rel=["']canonical["'][^>]*href=["']([^"']*)["']/i
-    );
-    if (!canonicalMatch) {
-      issues.push({
-        type: "info",
-        category: "Technical",
-        message: "No canonical URL",
-        details: "Consider adding a canonical link for duplicate content.",
-      });
-      score -= 2;
-    }
-
-    if (!html.includes("viewport")) {
-      issues.push({
-        type: "error",
-        category: "Mobile",
-        message: "Missing viewport meta tag",
-        details: "Required for mobile-friendly pages.",
-      });
-      score -= 12;
-    }
-
-    const robotsMatch = html.match(
-      /<meta[^>]*name=["']robots["'][^>]*content=["']([^"']*)["']/i
-    );
-    if (robotsMatch && /noindex/i.test(robotsMatch[1])) {
-      issues.push({
-        type: "warning",
-        category: "Technical",
-        message: "Page has noindex",
-        details: "This page will not be indexed by search engines.",
-      });
-      score -= 20;
-    }
-
-    if (!html.includes("og:title") && !html.includes("og:image")) {
-      issues.push({
-        type: "info",
-        category: "Social",
-        message: "Missing Open Graph tags",
-        details: "Add og:title, og:description, og:image for social sharing.",
-      });
-      score -= 3;
-    }
-
-    score = Math.max(0, score);
-  } catch (error) {
-    issues.push({
-      type: "error",
-      category: "Crawl",
-      message: "Failed to fetch URL",
-      details: error instanceof Error ? error.message : "Unknown error",
-    });
-    score = 0;
-  }
-
-  return { score, issues };
-}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, projectId } = schema.parse(body);
+    const { url, projectId, crawlType, maxPages } = schema.parse(body);
 
-    const { score, issues } = await runAudit(url);
-    const grade =
-      score >= 90 ? "A" : score >= 70 ? "B" : score >= 50 ? "C" : score >= 30 ? "D" : "F";
+    let urlsToAudit: string[] = [url];
 
-    // Save audit to DB if user is logged in
+    if (crawlType === "fullsite") {
+      const sitemapUrls = await getUrlsFromSitemap(url);
+      if (sitemapUrls.length > 0) {
+        urlsToAudit = sitemapUrls.slice(0, maxPages);
+      } else {
+        const res = await fetch(url, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; AlChemistSEO/1.0)" },
+        });
+        const html = await res.text();
+        const links = await discoverInternalLinks(url, html);
+        urlsToAudit = [url, ...links.slice(0, maxPages - 1)];
+      }
+    }
+
+    const results: { url: string; score: number; issues: AuditIssue[] }[] = [];
+    for (const u of urlsToAudit) {
+      const r = await auditSinglePage(u);
+      results.push({ url: u, ...r });
+    }
+
+    const avgScore = Math.round(
+      results.reduce((a, r) => a + r.score, 0) / results.length
+    );
+    const grade = getGrade(avgScore);
+
+    const allIssues: (AuditIssue & { url: string })[] = results.flatMap((r) =>
+      r.issues.map((i) => ({ ...i, url: r.url }))
+    );
+    const issuesByKey = new Map<
+      string,
+      { issue: AuditIssue; count: number }
+    >();
+    for (const i of allIssues) {
+      const key = `${i.category}|||${i.message}`;
+      const existing = issuesByKey.get(key);
+      if (existing) {
+        existing.count++;
+      } else {
+        issuesByKey.set(key, { issue: i, count: 1 });
+      }
+    }
+
+    const aggregatedIssues: AuditIssue[] = Array.from(issuesByKey.values())
+      .filter(({ count }) => count >= Math.ceil(results.length * 0.2))
+      .map(({ issue, count }) => ({
+        type: issue.type,
+        category: issue.category,
+        message: `${issue.message} (${count}/${results.length} pages)`,
+        details: issue.details,
+        weight: issue.weight,
+      }));
+
     const { userId } = await auth();
     if (userId) {
       let user = await prisma.user.findUnique({ where: { clerkId: userId } });
@@ -178,9 +86,13 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           projectId: projectId || null,
           status: "completed",
-          score,
+          score: avgScore,
           grade,
-          issues: JSON.stringify(issues),
+          issues: JSON.stringify(
+            crawlType === "single" ? results[0].issues : aggregatedIssues
+          ),
+          pagesCount: results.length,
+          crawlType,
         },
       });
     }
@@ -189,9 +101,12 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         url,
-        score,
-        issues,
+        score: avgScore,
         grade,
+        issues: crawlType === "single" ? results[0].issues : aggregatedIssues,
+        pagesAudited: results.length,
+        crawlType,
+        pageResults: crawlType === "fullsite" ? results : undefined,
       },
     });
   } catch (error) {

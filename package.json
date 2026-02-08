@@ -1,5 +1,5 @@
 {
-  "name": "seo-tools",
+  "name": "alchemist-seo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,12 +14,14 @@
   "dependencies": {
     "@clerk/nextjs": "^6.37.3",
     "@prisma/client": "^6",
+    "@react-pdf/renderer": "^4.3.2",
     "clsx": "^2",
     "lucide-react": "^0.475",
     "next": "16.1.6",
     "prisma": "^6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^2",
     "zod": "^3"
   },

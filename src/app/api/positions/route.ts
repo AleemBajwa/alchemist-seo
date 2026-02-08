@@ -7,6 +7,7 @@ const schema = z.object({
   keyword: z.string().min(1).max(200),
   target: z.string().min(1).max(500),
   locationCode: z.number().optional().default(2840),
+  projectId: z.string().optional(),
 });
 
 async function getDataForSEOCredentials(userId: string) {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { keyword, target, locationCode } = schema.parse(body);
+    const { keyword, target, locationCode, projectId } = schema.parse(body);
 
     const domain = target.startsWith("http")
       ? new URL(target).hostname.replace(/^www\./, "")
@@ -91,6 +92,47 @@ export async function POST(request: NextRequest) {
       });
 
     const targetResult = positions.find((p: { isTarget: boolean }) => p.isTarget);
+
+    if (projectId && userId) {
+      const user = await prisma.user.findUnique({
+        where: { clerkId: userId },
+        include: { projects: true },
+      });
+      const project = user?.projects.find((p) => p.id === projectId);
+      if (project) {
+        let tk = await prisma.trackedKeyword.findFirst({
+          where: { projectId, keyword, domain },
+        });
+        if (!tk) {
+          tk = await prisma.trackedKeyword.create({
+            data: {
+              projectId,
+              keyword,
+              domain,
+              position: targetResult?.position ?? null,
+              url: targetResult?.url ?? null,
+              lastChecked: new Date(),
+            },
+          });
+        } else {
+          await prisma.trackedKeyword.update({
+            where: { id: tk.id },
+            data: {
+              position: targetResult?.position ?? null,
+              url: targetResult?.url ?? null,
+              lastChecked: new Date(),
+            },
+          });
+        }
+        await prisma.positionHistory.create({
+          data: {
+            trackedKeywordId: tk.id,
+            position: targetResult?.position ?? null,
+            url: targetResult?.url ?? null,
+          },
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

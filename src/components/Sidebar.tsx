@@ -32,8 +32,8 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-56 flex-col border-r border-[var(--border)] bg-[var(--card)]">
       <div className="flex h-16 items-center justify-between border-b border-[var(--border)] px-6">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-xl font-bold text-[var(--accent)]">SEO</span>
-          <span className="text-xl font-bold text-zinc-400">Tools</span>
+          <span className="text-xl font-bold text-[var(--accent)]">AlChemist</span>
+          <span className="text-xl font-bold text-zinc-400">_SEO</span>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">

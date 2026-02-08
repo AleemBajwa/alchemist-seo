@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { FileSearch, Loader2, AlertTriangle, Info } from "lucide-react";
+import { FileSearch, Loader2, AlertTriangle, Info, FileDown, Globe } from "lucide-react";
 
 type AuditIssue = {
   type: "error" | "warning" | "info";
@@ -16,6 +16,8 @@ type AuditResult = {
   score: number;
   grade: string;
   issues: AuditIssue[];
+  pagesAudited?: number;
+  crawlType?: string;
 };
 
 function AuditContent() {
@@ -24,6 +26,7 @@ function AuditContent() {
   const projectIdParam = searchParams.get("projectId");
   const [url, setUrl] = useState("");
   const [projectId, setProjectId] = useState(projectIdParam || "");
+  const [crawlType, setCrawlType] = useState<"single" | "fullsite">("single");
 
   useEffect(() => {
     if (urlParam) {
@@ -39,6 +42,7 @@ function AuditContent() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,7 +61,12 @@ function AuditContent() {
       const res = await fetch("/api/audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: auditUrl, projectId: projectId || undefined }),
+        body: JSON.stringify({
+          url: auditUrl,
+          projectId: projectId || undefined,
+          crawlType,
+          maxPages: 25,
+        }),
       });
       const data = await res.json();
 
@@ -109,7 +118,34 @@ function AuditContent() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setCrawlType("single")}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              crawlType === "single"
+                ? "bg-[var(--accent)] text-white"
+                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+            }`}
+          >
+            <FileSearch className="h-4 w-4" />
+            Single page
+          </button>
+          <button
+            type="button"
+            onClick={() => setCrawlType("fullsite")}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              crawlType === "fullsite"
+                ? "bg-[var(--accent)] text-white"
+                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+            }`}
+          >
+            <Globe className="h-4 w-4" />
+            Full site (sitemap)
+          </button>
+        </div>
+        <div className="flex gap-4">
         <div className="relative flex-1">
           <FileSearch className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-500" />
           <input
@@ -138,6 +174,7 @@ function AuditContent() {
             </>
           )}
         </button>
+        </div>
       </form>
 
       {error && (
@@ -148,7 +185,7 @@ function AuditContent() {
 
       {result && (
         <div className="space-y-6">
-          <div className="flex items-center gap-6 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
             <div
               className={`flex h-24 w-24 items-center justify-center rounded-2xl text-4xl font-bold ${getGradeColor(result.grade)}`}
             >
@@ -161,8 +198,46 @@ function AuditContent() {
               <p className="mt-1 text-sm text-zinc-500">{result.url}</p>
               <p className="mt-2 text-sm text-zinc-400">
                 {result.issues.length} issue{result.issues.length !== 1 ? "s" : ""} found
+                {result.pagesAudited && result.pagesAudited > 1 && (
+                  <span> • {result.pagesAudited} pages audited</span>
+                )}
               </p>
             </div>
+            <button
+              onClick={async () => {
+                setPdfLoading(true);
+                try {
+                  const res = await fetch("/api/audit/pdf", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      url: result.url,
+                      score: result.score,
+                      grade: result.grade,
+                      issues: result.issues,
+                      pagesAudited: result.pagesAudited ?? 1,
+                    }),
+                  });
+                  const blob = await res.blob();
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `seo-audit-${Date.now()}.pdf`;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              disabled={pdfLoading}
+              className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 disabled:opacity-50"
+            >
+              {pdfLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileDown className="h-4 w-4" />
+              )}
+              Export PDF
+            </button>
           </div>
 
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
