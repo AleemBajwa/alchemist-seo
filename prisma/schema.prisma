@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// PostgreSQL for production (Neon, Supabase, etc.)
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(cuid())
+  clerkId    String     @unique
+  email      String
+  name       String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  projects   Project[]
+  apiKeys    UserApiKey[]
+  auditRuns  AuditRun[]
+}
+
+model UserApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String
+  login       String?
+  password    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, provider])
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  domain      String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  keywords    Keyword[]
+  auditRuns   AuditRun[]
+  trackedKeywords TrackedKeyword[]
+}
+
+model Keyword {
+  id          String   @id @default(cuid())
+  keyword     String
+  volume      Int?
+  difficulty  Int?
+  cpc         Float?
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model TrackedKeyword {
+  id          String   @id @default(cuid())
+  keyword     String
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  position    Int?
+  url         String?
+  lastChecked DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AuditRun {
+  id        String   @id @default(cuid())
+  url       String
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    String
+  score     Int
+  grade     String
+  issues    String
+  createdAt DateTime @default(now())
+}
