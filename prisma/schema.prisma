@@ -13,12 +13,28 @@ model User {
   clerkId         String           @unique
   email           String
   name            String?
+  stripeCustomerId String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   projects        Project[]
   apiKeys         UserApiKey[]
   auditRuns       AuditRun[]
   whiteLabel      WhiteLabel?
+  subscription    Subscription?
+  domainSnapshots DomainSnapshot[]
+  apiKeysDev      ApiKey[]
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripePriceId     String?
+  stripeSubscriptionId String?
+  status            String   @default("inactive")
+  currentPeriodEnd  DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 model WhiteLabel {
@@ -54,6 +70,7 @@ model Project {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   keywords    Keyword[]
+  keywordFolders KeywordFolder[]
   auditRuns   AuditRun[]
   trackedKeywords TrackedKeyword[]
 }
@@ -66,7 +83,21 @@ model Keyword {
   cpc         Float?
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folderId    String?
+  folder      KeywordFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
+}
+
+model KeywordFolder {
+  id          String   @id @default(cuid())
+  name        String
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keywords    Keyword[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([projectId, name])
 }
 
 model TrackedKeyword {
@@ -106,3 +137,34 @@ model AuditRun {
   crawlType   String?  @default("single")
   createdAt   DateTime @default(now())
 }
+
+model DomainSnapshot {
+  id              String   @id @default(cuid())
+  domain          String
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  etv             Float?
+  keywordCount    Int?
+  rank            Int?
+  backlinks       Int?
+  referringDomains Int?
+  snapshotMonth   String
+  createdAt       DateTime @default(now())
+
+  @@unique([domain, userId, snapshotMonth])
+  @@index([userId, domain])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  keyHash     String   @unique
+  keyPrefix   String
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([keyHash])
+}
+

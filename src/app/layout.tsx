@@ -1,21 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Sora } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sora = Sora({
+  variable: "--font-heading",
   subsets: ["latin"],
+  display: "swap",
+  weight: ["500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "AlChemist_SEO | Keyword Research, Site Audit & Rankings",
-  description: "Professional SEO platform: keyword research, site audit, position tracking, backlinks.",
+  description: "Professional SEO platform: keyword research, site audit, and position tracking.",
 };
 
 export default function RootLayout({
@@ -27,7 +31,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          className={`${sora.variable} ${jakarta.variable} antialiased`}
         >
           {children}
         </body>

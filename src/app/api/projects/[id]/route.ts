@@ -19,7 +19,21 @@ export async function GET(
       projects: {
         where: { id },
         include: {
-          keywords: { orderBy: { createdAt: "desc" }, take: 50 },
+          keywords: {
+            orderBy: { createdAt: "desc" },
+            take: 100,
+            include: {
+              folder: true,
+            },
+          },
+          keywordFolders: {
+            orderBy: { name: "asc" },
+            include: {
+              _count: {
+                select: { keywords: true },
+              },
+            },
+          },
           trackedKeywords: {
             include: {
               positionHistory: { orderBy: { checkedAt: "desc" }, take: 30 },

@@ -37,6 +37,17 @@ function PositionsContent() {
     results: { position: number; url: string; title: string; domain: string; isTarget: boolean }[];
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasDataForSeoKey, setHasDataForSeoKey] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings/keys")
+      .then((r) => r.json())
+      .then((d) => {
+        const configured = !!d?.keys?.find((k: { provider: string; hasCredentials: boolean }) => k.provider === "dataforseo")?.hasCredentials;
+        setHasDataForSeoKey(configured);
+      })
+      .catch(() => setHasDataForSeoKey(false));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +71,7 @@ function PositionsContent() {
 
       if (!data.success) {
         if (data.error === "API_KEYS_REQUIRED") {
-          setError("Add your DataForSEO credentials in Settings.");
+          setError(data.message || "DataForSEO is not configured by the account owner yet.");
         } else {
           setError(data.message || "Failed to check position");
         }
@@ -75,48 +86,61 @@ function PositionsContent() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
-          Position Tracking
-        </h1>
-        <p className="mt-1 text-zinc-500">
-          Check where your site ranks for a keyword. Requires DataForSEO.
+    <div className="space-y-6">
+      <div className="hero-shell p-5 md:p-6">
+        <span className="hero-kicker">SERP Intelligence</span>
+        <h1 className="hero-title mt-3">Position Tracking</h1>
+        <p className="mt-2 max-w-3xl text-[1rem] text-zinc-600">
+          Inspect ranking position against live SERP results and capture tracked visibility inside your projects.
         </p>
+        <span className="mt-3 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-700">
+          DataForSEO live feed
+        </span>
       </div>
+
+      {hasDataForSeoKey === false && (
+        <div className="rounded-xl border border-orange-500/45 bg-orange-500/10 p-4 text-sm text-orange-200">
+          DataForSEO is managed by the account owner. Service is currently not configured. Check{" "}
+          <a href="/settings" className="font-medium underline hover:text-orange-100">
+            Settings
+          </a>{" "}
+          for service status.
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="block text-sm text-zinc-500 mb-1">Keyword</label>
+            <label className="mb-1 block text-sm font-medium text-zinc-600">Keyword</label>
             <input
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               placeholder="e.g. best seo tools"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] py-3 px-4 text-zinc-100 placeholder:text-zinc-600"
+              className="w-full py-2.5 disabled:opacity-50"
               disabled={loading}
             />
           </div>
           <div>
-            <label className="block text-sm text-zinc-500 mb-1">Your domain</label>
+            <label className="mb-1 block text-sm font-medium text-zinc-600">Your domain</label>
             <input
               type="text"
               value={target}
               onChange={(e) => setTarget(e.target.value)}
               placeholder="example.com"
-              className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] py-3 px-4 text-zinc-100 placeholder:text-zinc-600"
+              className="w-full py-2.5 disabled:opacity-50"
               disabled={loading}
             />
           </div>
           {projects.length > 0 && (
             <div className="sm:col-span-2">
-              <label className="block text-sm text-zinc-500 mb-1">Track in project (optional)</label>
+              <label className="mb-1 block text-sm font-medium text-zinc-600">Track in project (optional)</label>
               <select
                 value={projectId}
                 onChange={(e) => setProjectId(e.target.value)}
-                className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] py-3 px-4 text-zinc-100"
+                className="w-full py-2.5"
                 disabled={loading}
+                aria-label="Track in project"
               >
                 <option value="">Don&apos;t track</option>
                 {projects.map((p) => (
@@ -131,7 +155,7 @@ function PositionsContent() {
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 font-medium text-white hover:bg-[var(--accent-muted)] disabled:opacity-50"
+          className="btn-primary flex items-center gap-2 disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -148,24 +172,24 @@ function PositionsContent() {
       </form>
 
       {error && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-amber-400">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
           {error}
-          {error.includes("Settings") && (
-            <a href="/settings" className="ml-2 underline">Go to Settings</a>
+          {(error.includes("Settings") || error.includes("Upgrade") || error.includes("owner")) && (
+            <a href="/settings" className="ml-2 font-medium text-[var(--accent-muted)] underline">Go to Settings</a>
           )}
         </div>
       )}
 
       {result && (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
-            <h3 className="text-lg font-semibold text-zinc-100">Results</h3>
-            <div className="mt-4 flex items-center gap-4">
+        <div className="space-y-4">
+          <div className="panel p-5">
+            <h3 className="font-heading text-lg font-semibold text-foreground">Results</h3>
+            <div className="mt-4 flex flex-wrap items-center gap-4">
               <span className="text-zinc-500">Keyword:</span>
-              <span className="font-medium text-zinc-100">{result.keyword}</span>
+              <span className="font-medium text-foreground">{result.keyword}</span>
               <span className="text-zinc-500">|</span>
               <span className="text-zinc-500">Domain:</span>
-              <span className="font-medium text-zinc-100">{result.target}</span>
+              <span className="font-medium text-foreground">{result.target}</span>
               <span className="text-zinc-500">|</span>
               <span className="text-zinc-500">Position:</span>
               <span className="font-bold text-[var(--accent)]">
@@ -175,8 +199,8 @@ function PositionsContent() {
           </div>
 
           {result.results.length > 0 && (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-              <h3 className="border-b border-[var(--border)] px-6 py-4 font-semibold text-zinc-100">
+            <div className="panel overflow-hidden">
+              <h3 className="border-b border-[var(--border)] px-6 py-4 font-heading text-lg font-semibold text-foreground">
                 SERP Results (top 100)
               </h3>
               <div className="divide-y divide-[var(--border)] max-h-[500px] overflow-y-auto">
@@ -196,7 +220,7 @@ function PositionsContent() {
                         href={item.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`truncate block ${item.isTarget ? "text-[var(--accent)] font-medium" : "text-zinc-300 hover:text-zinc-100"}`}
+                        className={`block truncate ${item.isTarget ? "font-medium text-[var(--accent)]" : "text-zinc-600 hover:text-foreground"}`}
                       >
                         {item.title || item.url}
                       </a>

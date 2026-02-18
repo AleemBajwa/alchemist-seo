@@ -9,7 +9,13 @@ type Project = {
   id: string;
   name: string;
   domain: string;
-  keywords: { keyword: string; volume: number | null; difficulty: number | null }[];
+  keywords: {
+    keyword: string;
+    volume: number | null;
+    difficulty: number | null;
+    folder?: { id: string; name: string } | null;
+  }[];
+  keywordFolders?: { id: string; name: string; _count: { keywords: number } }[];
   trackedKeywords?: {
     id: string;
     keyword: string;
@@ -54,16 +60,16 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex items-center gap-4">
         <Link
           href="/projects"
-          className="rounded-lg p-2 text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+          className="rounded-xl p-2 text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-foreground"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
+          <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground">
             {project.name}
           </h1>
           <p className="text-zinc-500">{project.domain}</p>
@@ -73,13 +79,13 @@ export default function ProjectDetailPage() {
       <div className="grid gap-6 sm:grid-cols-2">
         <Link
           href={`/keywords?projectId=${project.id}`}
-          className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-colors hover:border-zinc-600"
+          className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-zinc-300 hover:shadow-[var(--shadow)]"
         >
-          <div className="rounded-lg bg-orange-500/10 p-3">
-            <Search className="h-8 w-8 text-orange-500" />
+          <div className="rounded-xl bg-orange-100 p-3">
+            <Search className="h-8 w-8 text-orange-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-100">Keyword Research</h3>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Keyword Research</h3>
             <p className="text-sm text-zinc-500">
               {project.keywords?.length || 0} keywords saved
             </p>
@@ -87,25 +93,25 @@ export default function ProjectDetailPage() {
         </Link>
         <Link
           href={`/audit?projectId=${project.id}&url=${encodeURIComponent(`https://${project.domain}`)}`}
-          className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-colors hover:border-zinc-600"
+          className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-zinc-300 hover:shadow-[var(--shadow)]"
         >
-          <div className="rounded-lg bg-emerald-500/10 p-3">
-            <FileSearch className="h-8 w-8 text-emerald-500" />
+          <div className="rounded-xl bg-emerald-100 p-3">
+            <FileSearch className="h-8 w-8 text-emerald-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-100">Site Audit</h3>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Site Audit</h3>
             <p className="text-sm text-zinc-500">Audit this site</p>
           </div>
         </Link>
         <Link
           href={`/positions?projectId=${project.id}`}
-          className="flex items-center gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-colors hover:border-zinc-600"
+          className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-zinc-300 hover:shadow-[var(--shadow)]"
         >
-          <div className="rounded-lg bg-blue-500/10 p-3">
-            <BarChart3 className="h-8 w-8 text-blue-500" />
+          <div className="rounded-xl bg-blue-100 p-3">
+            <BarChart3 className="h-8 w-8 text-blue-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-zinc-100">Position Tracking</h3>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Position Tracking</h3>
             <p className="text-sm text-zinc-500">
               {project.trackedKeywords?.length || 0} keywords tracked
             </p>
@@ -114,15 +120,15 @@ export default function ProjectDetailPage() {
       </div>
 
       {project.trackedKeywords && project.trackedKeywords.length > 0 && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-          <h3 className="border-b border-[var(--border)] px-6 py-4 font-semibold text-zinc-100">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
+          <h3 className="border-b border-[var(--border)] px-6 py-4 font-heading text-lg font-semibold text-foreground">
             Tracked Keywords
           </h3>
           <div className="divide-y divide-[var(--border)]">
             {project.trackedKeywords.map((tk) => (
               <div key={tk.id} className="px-6 py-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium text-zinc-200">{tk.keyword}</span>
+                  <span className="font-medium text-foreground">{tk.keyword}</span>
                   <span className="text-[var(--accent)] font-bold">
                     #{tk.position ?? "—"}
                   </span>
@@ -139,17 +145,38 @@ export default function ProjectDetailPage() {
       )}
 
       {project.keywords && project.keywords.length > 0 && (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-          <h3 className="border-b border-[var(--border)] px-6 py-4 font-semibold text-zinc-100">
+        <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
+          <h3 className="border-b border-[var(--border)] px-6 py-4 font-heading text-lg font-semibold text-foreground">
             Saved Keywords
           </h3>
+          {project.keywordFolders && project.keywordFolders.length > 0 && (
+            <div className="border-b border-[var(--border)] px-6 py-3">
+              <div className="flex flex-wrap gap-2">
+                {project.keywordFolders.map((folder) => (
+                  <span
+                    key={folder.id}
+                    className="rounded-full border border-cyan-400/35 bg-cyan-500/10 px-2.5 py-1 text-xs text-cyan-100"
+                  >
+                    {folder.name} ({folder._count.keywords})
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="divide-y divide-[var(--border)]">
             {project.keywords.map((k, i) => (
               <div
                 key={i}
                 className="flex items-center justify-between px-6 py-3"
               >
-                <span className="font-medium text-zinc-200">{k.keyword}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">{k.keyword}</span>
+                  {k.folder?.name && (
+                    <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] text-fuchsia-200">
+                      {k.folder.name}
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-4 text-sm text-zinc-500">
                   {k.volume != null && <span>Vol: {k.volume.toLocaleString()}</span>}
                   {k.difficulty != null && <span>Diff: {k.difficulty}%</span>}

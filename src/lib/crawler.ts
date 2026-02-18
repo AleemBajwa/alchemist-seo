@@ -66,3 +66,65 @@ export async function discoverInternalLinks(
   }
   return [...new Set(urls)];
 }
+
+type CrawlSiteOptions = {
+  startUrl: string;
+  maxPages: number;
+};
+
+export async function crawlSiteUrls({
+  startUrl,
+  maxPages,
+}: CrawlSiteOptions): Promise<{ urls: string[]; source: "sitemap" | "bfs" }> {
+  const normalizedStart = startUrl.startsWith("http")
+    ? startUrl
+    : `https://${startUrl}`;
+  const start = new URL(normalizedStart);
+  const origin = start.origin;
+
+  const sitemapUrls = (await getUrlsFromSitemap(normalizedStart))
+    .filter((u) => {
+      try {
+        return new URL(u).origin === origin;
+      } catch {
+        return false;
+      }
+    })
+    .slice(0, maxPages);
+
+  if (sitemapUrls.length > 0) {
+    const unique = [...new Set([normalizedStart, ...sitemapUrls])].slice(0, maxPages);
+    return { urls: unique, source: "sitemap" };
+  }
+
+  const queue: string[] = [normalizedStart];
+  const visited = new Set<string>();
+  const discovered = new Set<string>();
+
+  while (queue.length > 0 && discovered.size < maxPages) {
+    const current = queue.shift();
+    if (!current || visited.has(current)) continue;
+    visited.add(current);
+    discovered.add(current);
+
+    try {
+      const res = await fetch(current, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; AlChemistSEO/1.0)" },
+      });
+      if (!res.ok) continue;
+      const html = await res.text();
+      const links = await discoverInternalLinks(current, html);
+      for (const link of links) {
+        if (discovered.size >= maxPages) break;
+        if (!visited.has(link) && !queue.includes(link)) {
+          queue.push(link);
+        }
+      }
+    } catch {
+      // Continue crawl even if one page fails.
+      continue;
+    }
+  }
+
+  return { urls: [...discovered].slice(0, maxPages), source: "bfs" };
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, FileSearch, BarChart3, FolderKanban, Link2, Clock } from "lucide-react";
+import { Search, FileSearch, BarChart3, FolderKanban, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 const stats = [
@@ -9,73 +9,67 @@ const stats = [
     description: "Organize sites & keywords",
     icon: FolderKanban,
     href: "/projects",
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
+    iconClasses: "bg-[var(--accent)]/15 text-[var(--accent-muted)]",
   },
   {
     label: "Keyword Research",
     description: "Discover keywords & search volume",
     icon: Search,
     href: "/keywords",
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
+    iconClasses: "bg-fuchsia-500/15 text-fuchsia-300",
   },
   {
     label: "Site Audit",
     description: "Crawl & fix SEO issues",
     icon: FileSearch,
     href: "/audit",
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
+    iconClasses: "bg-cyan-500/15 text-cyan-300",
+  },
+  {
+    label: "AI Content",
+    description: "Generate SEO-ready long-form content",
+    icon: Sparkles,
+    href: "/content",
+    iconClasses: "bg-fuchsia-500/15 text-fuchsia-300",
   },
   {
     label: "Position Tracking",
     description: "Check Google rankings",
     icon: BarChart3,
     href: "/positions",
-    color: "text-blue-500",
-    bg: "bg-blue-500/10",
-  },
-  {
-    label: "Backlinks",
-    description: "Analyze link profile",
-    icon: Link2,
-    href: "/backlinks",
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
+    iconClasses: "bg-indigo-500/15 text-indigo-300",
   },
   {
     label: "Audit History",
     description: "View past audits",
     icon: Clock,
     href: "/audit/history",
-    color: "text-cyan-500",
-    bg: "bg-cyan-500/10",
+    iconClasses: "bg-violet-500/15 text-violet-300",
   },
 ];
 
 export function DashboardStats() {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        const content = (
-          <div
-            className="relative overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-all hover:border-zinc-600"
-          >
-            <div className={`mb-4 inline-flex rounded-lg p-2.5 ${stat.bg} ${stat.color}`}>
-              <Icon className="h-6 w-6" />
-            </div>
-            <h3 className="font-semibold text-zinc-100">{stat.label}</h3>
-            <p className="mt-1 text-sm text-zinc-500">{stat.description}</p>
-          </div>
-        );
-        return (
-          <Link key={stat.label} href={stat.href}>
-            {content}
-          </Link>
-        );
-      })}
+    <div>
+      <h2 className="mb-3 font-heading text-xl font-semibold text-foreground">Tools</h2>
+      <div className="compact-grid sm:grid-cols-2 lg:grid-cols-3">
+        {stats.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <Link
+              key={stat.label}
+              href={stat.href}
+              className="group block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:border-cyan-400/40 hover:shadow-[var(--shadow-lg)]"
+            >
+              <div className={`mb-3 inline-flex rounded-xl p-2.5 transition-transform duration-200 group-hover:scale-110 ${stat.iconClasses}`}>
+                <Icon className="h-5 w-5" />
+              </div>
+              <h3 className="font-heading text-lg font-semibold text-foreground">{stat.label}</h3>
+              <p className="mt-1 text-sm text-zinc-500">{stat.description}</p>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

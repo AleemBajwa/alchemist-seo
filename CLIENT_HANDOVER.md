@@ -1,13 +1,13 @@
 # AlChemist_SEO – Client Handover
 
 **Delivered:** February 8, 2025  
-**Platform:** Professional SEO suite (keyword research, site audit, position tracking, backlinks)
+**Platform:** Professional SEO suite (keyword research, site audit, position tracking)
 
 ---
 
 ## Live URL
 
-**https://alchemist-seo.vercel.app**
+[https://alchemist-seo.vercel.app](https://alchemist-seo.vercel.app)
 
 ---
 
@@ -23,25 +23,24 @@
 ## Features Included
 
 | Feature | Description |
-|---------|-------------|
+| ------- | ----------- |
 | **Dashboard** | Overview of projects, audits, and API status |
 | **Projects** | Create and manage sites |
 | **Keyword Research** | Discover keywords, volume, difficulty (requires DataForSEO) |
 | **Site Audit** | Check any URL for SEO issues |
 | **Audit History** | View past audits |
 | **Position Tracking** | Check Google rankings for keywords |
-| **Backlinks** | Analyze backlink profile |
-| **Settings** | Add DataForSEO credentials |
+| **Settings** | Add DataForSEO API key |
 
 ---
 
 ## DataForSEO Setup (Optional)
 
-For Keyword Research, Position Tracking, and Backlinks:
+For Keyword Research and Position Tracking:
 
 1. Sign up at [dataforseo.com](https://dataforseo.com)
 2. Add funds (pay-as-you-go)
-3. In the app: go to **Settings** → enter Login and Password → Save
+3. In the app: go to **Settings** → enter API key → Save
 
 ---
 

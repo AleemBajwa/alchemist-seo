@@ -18,6 +18,28 @@ type AuditResult = {
   issues: AuditIssue[];
   pagesAudited?: number;
   crawlType?: string;
+  pageSpeed?: {
+    mobile: {
+      strategy: "mobile" | "desktop";
+      performanceScore: number | null;
+      lcpMs: number | null;
+      cls: number | null;
+      inpMs: number | null;
+      fcpMs: number | null;
+      speedIndexMs: number | null;
+      isMobileFriendly: boolean | null;
+    } | null;
+    desktop: {
+      strategy: "mobile" | "desktop";
+      performanceScore: number | null;
+      lcpMs: number | null;
+      cls: number | null;
+      inpMs: number | null;
+      fcpMs: number | null;
+      speedIndexMs: number | null;
+      isMobileFriendly: boolean | null;
+    } | null;
+  };
 };
 
 function AuditContent() {
@@ -25,6 +47,7 @@ function AuditContent() {
   const urlParam = searchParams.get("url");
   const projectIdParam = searchParams.get("projectId");
   const [url, setUrl] = useState("");
+  const [focusKeyword, setFocusKeyword] = useState("");
   const [projectId, setProjectId] = useState(projectIdParam || "");
   const [crawlType, setCrawlType] = useState<"single" | "fullsite">("single");
 
@@ -64,6 +87,7 @@ function AuditContent() {
         body: JSON.stringify({
           url: auditUrl,
           projectId: projectId || undefined,
+          focusKeyword: focusKeyword.trim() || undefined,
           crawlType,
           maxPages: 25,
         }),
@@ -84,49 +108,49 @@ function AuditContent() {
   const getGradeColor = (grade: string) => {
     switch (grade) {
       case "A":
-        return "text-emerald-400 bg-emerald-400/20";
+        return "text-emerald-600 bg-emerald-100";
       case "B":
-        return "text-blue-400 bg-blue-400/20";
+        return "text-blue-600 bg-blue-100";
       case "C":
-        return "text-amber-400 bg-amber-400/20";
+        return "text-amber-600 bg-amber-100";
       case "D":
-        return "text-orange-400 bg-orange-400/20";
+        return "text-orange-600 bg-orange-100";
       default:
-        return "text-red-400 bg-red-400/20";
+        return "text-red-600 bg-red-100";
     }
   };
 
   const getIssueIcon = (type: string) => {
     switch (type) {
       case "error":
-        return <AlertTriangle className="h-5 w-5 text-red-400" />;
+        return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case "warning":
-        return <AlertTriangle className="h-5 w-5 text-amber-400" />;
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       default:
-        return <Info className="h-5 w-5 text-blue-400" />;
+        return <Info className="h-5 w-5 text-blue-500" />;
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
+        <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground">
           Site Audit
         </h1>
-        <p className="mt-1 text-zinc-500">
+        <p className="mt-2 text-lg text-zinc-500">
           Crawl any URL and get instant SEO recommendations. Checks titles, meta, mobile, and more.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setCrawlType("single")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
               crawlType === "single"
                 ? "bg-[var(--accent)] text-white"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                : "border border-[var(--border)] bg-white text-zinc-500 hover:bg-zinc-50"
             }`}
           >
             <FileSearch className="h-4 w-4" />
@@ -135,10 +159,10 @@ function AuditContent() {
           <button
             type="button"
             onClick={() => setCrawlType("fullsite")}
-            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
               crawlType === "fullsite"
                 ? "bg-[var(--accent)] text-white"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                : "border border-[var(--border)] bg-white text-zinc-500 hover:bg-zinc-50"
             }`}
           >
             <Globe className="h-4 w-4" />
@@ -153,14 +177,14 @@ function AuditContent() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://example.com or example.com"
-            className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] py-3 pl-12 pr-4 text-zinc-100 placeholder:text-zinc-600 focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)]"
+            className="w-full py-3 pl-12 pr-4 disabled:opacity-50"
             disabled={loading}
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--accent-muted)] disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--accent-muted)] disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -175,24 +199,34 @@ function AuditContent() {
           )}
         </button>
         </div>
+        <div className="relative max-w-xl">
+          <input
+            type="text"
+            value={focusKeyword}
+            onChange={(e) => setFocusKeyword(e.target.value)}
+            placeholder="Optional focus keyword for presence checks"
+            className="w-full py-2.5 px-4 disabled:opacity-50"
+            disabled={loading}
+          />
+        </div>
       </form>
 
       {error && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error}
         </div>
       )}
 
       {result && (
         <div className="space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
+          <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)]">
             <div
-              className={`flex h-24 w-24 items-center justify-center rounded-2xl text-4xl font-bold ${getGradeColor(result.grade)}`}
+              className={`flex h-24 w-24 items-center justify-center rounded-2xl font-heading text-4xl font-bold ${getGradeColor(result.grade)}`}
             >
               {result.grade}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-zinc-100">
+              <h2 className="font-heading text-xl font-semibold text-foreground">
                 SEO Score: {result.score}/100
               </h2>
               <p className="mt-1 text-sm text-zinc-500">{result.url}</p>
@@ -229,7 +263,7 @@ function AuditContent() {
                 }
               }}
               disabled={pdfLoading}
-              className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-zinc-800 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-zinc-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-zinc-50 disabled:opacity-50"
             >
               {pdfLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -240,23 +274,58 @@ function AuditContent() {
             </button>
           </div>
 
-          <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
-            <h3 className="border-b border-[var(--border)] px-6 py-4 font-semibold text-zinc-100">
+          {result.pageSpeed && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="panel p-4">
+                <h3 className="font-heading text-base font-semibold text-foreground">Core Web Vitals (Mobile)</h3>
+                {result.pageSpeed.mobile ? (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-zinc-500">
+                    <p>Performance: <span className="text-foreground">{result.pageSpeed.mobile.performanceScore ?? "-"} / 100</span></p>
+                    <p>Mobile Friendly: <span className="text-foreground">{result.pageSpeed.mobile.isMobileFriendly == null ? "-" : result.pageSpeed.mobile.isMobileFriendly ? "Yes" : "No"}</span></p>
+                    <p>LCP: <span className="text-foreground">{result.pageSpeed.mobile.lcpMs != null ? `${Math.round(result.pageSpeed.mobile.lcpMs)}ms` : "-"}</span></p>
+                    <p>INP/FID: <span className="text-foreground">{result.pageSpeed.mobile.inpMs != null ? `${Math.round(result.pageSpeed.mobile.inpMs)}ms` : "-"}</span></p>
+                    <p>CLS: <span className="text-foreground">{result.pageSpeed.mobile.cls != null ? result.pageSpeed.mobile.cls.toFixed(3) : "-"}</span></p>
+                    <p>FCP: <span className="text-foreground">{result.pageSpeed.mobile.fcpMs != null ? `${Math.round(result.pageSpeed.mobile.fcpMs)}ms` : "-"}</span></p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-zinc-500">No mobile PageSpeed metrics available.</p>
+                )}
+              </div>
+              <div className="panel p-4">
+                <h3 className="font-heading text-base font-semibold text-foreground">Performance (Desktop)</h3>
+                {result.pageSpeed.desktop ? (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-zinc-500">
+                    <p>Performance: <span className="text-foreground">{result.pageSpeed.desktop.performanceScore ?? "-"} / 100</span></p>
+                    <p>Speed Index: <span className="text-foreground">{result.pageSpeed.desktop.speedIndexMs != null ? `${Math.round(result.pageSpeed.desktop.speedIndexMs)}ms` : "-"}</span></p>
+                    <p>LCP: <span className="text-foreground">{result.pageSpeed.desktop.lcpMs != null ? `${Math.round(result.pageSpeed.desktop.lcpMs)}ms` : "-"}</span></p>
+                    <p>INP/FID: <span className="text-foreground">{result.pageSpeed.desktop.inpMs != null ? `${Math.round(result.pageSpeed.desktop.inpMs)}ms` : "-"}</span></p>
+                    <p>CLS: <span className="text-foreground">{result.pageSpeed.desktop.cls != null ? result.pageSpeed.desktop.cls.toFixed(3) : "-"}</span></p>
+                    <p>FCP: <span className="text-foreground">{result.pageSpeed.desktop.fcpMs != null ? `${Math.round(result.pageSpeed.desktop.fcpMs)}ms` : "-"}</span></p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-zinc-500">No desktop PageSpeed metrics available.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-sm)]">
+            <h3 className="border-b border-[var(--border)] px-6 py-4 font-heading text-lg font-semibold text-foreground">
               Issues
             </h3>
             <div className="divide-y divide-[var(--border)]">
               {result.issues.map((issue, i) => (
                 <div
                   key={i}
-                  className="flex gap-4 px-6 py-4 hover:bg-white/5"
+                  className="flex gap-4 px-6 py-4 transition-colors hover:bg-zinc-50/50"
                 >
                   <div className="shrink-0">{getIssueIcon(issue.type)}</div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-zinc-100">
+                      <span className="text-sm font-medium text-foreground">
                         {issue.message}
                       </span>
-                      <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs text-zinc-500">
+                      <span className="rounded-lg bg-zinc-100 px-2 py-0.5 text-xs text-zinc-500">
                         {issue.category}
                       </span>
                     </div>

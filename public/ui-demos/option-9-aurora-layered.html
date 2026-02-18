@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 9 - Layered Aurora 3D</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
+      color: #f8fafc;
+      overflow: hidden;
+      background: #031322;
+    }
+    .aurora {
+      position: fixed;
+      inset: -20%;
+      pointer-events: none;
+      background:
+        radial-gradient(540px 260px at 20% 25%, rgba(16, 185, 129, 0.24), transparent 58%),
+        radial-gradient(640px 300px at 75% 68%, rgba(56, 189, 248, 0.22), transparent 58%),
+        radial-gradient(460px 240px at 48% 12%, rgba(99, 102, 241, 0.18), transparent 60%);
+      filter: blur(26px);
+      transform: perspective(1200px) rotateX(8deg);
+      animation: wave 18s ease-in-out infinite alternate;
+    }
+    .aurora::before,
+    .aurora::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, transparent, rgba(255,255,255,0.06), transparent);
+    }
+    .aurora::before { animation: sweep 7s linear infinite; }
+    .aurora::after { animation: sweep 11s linear infinite reverse; opacity: 0.7; }
+    .wrap { position: relative; z-index: 2; max-width: 1060px; margin: 0 auto; padding: 30px; }
+    .glass {
+      border: 1px solid rgba(125, 211, 252, 0.35);
+      border-radius: 18px;
+      background: rgba(3, 18, 31, 0.58);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      padding: 22px;
+      box-shadow: 0 26px 58px rgba(2, 6, 23, 0.54);
+    }
+    h1 { margin: 0 0 8px; font-size: 38px; }
+    p { margin: 0; color: #bae6fd; }
+    .metrics { margin-top: 16px; display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .m {
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 12px;
+      background: rgba(8, 47, 73, 0.5);
+      padding: 12px;
+      transform: perspective(700px) rotateY(-7deg);
+      transition: transform .25s ease;
+    }
+    .m:hover { transform: perspective(700px) rotateY(0deg) translateY(-3px); }
+    .mk { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: #a5f3fc; }
+    .mv { margin-top: 6px; font-size: 24px; font-weight: 700; }
+    @keyframes wave { from { transform: perspective(1200px) rotateX(6deg) translateX(-4%); } to { transform: perspective(1200px) rotateX(12deg) translateX(5%); } }
+    @keyframes sweep { from { transform: translateX(-35%) rotate(8deg); } to { transform: translateX(35%) rotate(8deg); } }
+  </style>
+</head>
+<body>
+  <div class="aurora"></div>
+  <div class="wrap">
+    <section class="glass">
+      <h1>Layered Aurora Dashboard</h1>
+      <p>Smooth atmospheric movement with clean data blocks and subtle 3D perspective.</p>
+      <div class="metrics">
+        <div class="m"><div class="mk">Domain Health</div><div class="mv">A</div></div>
+        <div class="m"><div class="mk">Top 3 Keywords</div><div class="mv">126</div></div>
+        <div class="m"><div class="mk">CTR Lift</div><div class="mv">+18%</div></div>
+        <div class="m"><div class="mk">Issue Debt</div><div class="mv">-42%</div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 2 - Light Glass</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif; color: #0f172a;
+      background: radial-gradient(900px 420px at 0% -10%, rgba(59,130,246,.2), transparent 52%),
+                  linear-gradient(180deg, #f8faff, #edf2ff);
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 30px; }
+    .hero {
+      border: 1px solid #dbeafe; border-radius: 20px; padding: 22px;
+      background: rgba(255,255,255,.78); -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 40px rgba(99,102,241,.16);
+    }
+    h1 { margin: 0 0 8px; font-size: 36px; }
+    p { margin: 0; color: #475569; }
+    .chips { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip { border: 1px solid #bfdbfe; background: #eff6ff; border-radius: 999px; padding: 6px 10px; font-size: 12px; color: #1d4ed8; }
+    .grid { margin-top: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; }
+    .title { font-weight: 700; margin-bottom: 8px; }
+    .bar { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+    .fill { width: 72%; height: 100%; background: linear-gradient(90deg, #3b82f6, #6366f1); }
+    .fill-two { width: 61%; }
+    .fill-three { width: 83%; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Light Glass Productivity</h1>
+      <p>Calm, modern, and agency-friendly with subtle glow and faster readability.</p>
+      <div class="chips">
+        <span class="chip">Live Data</span><span class="chip">Fast Actions</span><span class="chip">Executive Reports</span>
+      </div>
+      <div class="grid">
+        <div class="card"><div class="title">Visibility</div><div class="bar"><div class="fill"></div></div></div>
+        <div class="card"><div class="title">Content Health</div><div class="bar"><div class="fill fill-two"></div></div></div>
+        <div class="card"><div class="title">Ranking Stability</div><div class="bar"><div class="fill fill-three"></div></div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

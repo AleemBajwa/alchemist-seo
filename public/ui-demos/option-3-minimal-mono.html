@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 3 - Minimal Mono</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; color: #111; background: #fff; }
+    .wrap { max-width: 1020px; margin: 0 auto; padding: 28px; }
+    .hero { border: 2px solid #111; border-radius: 12px; padding: 18px; }
+    h1 { margin: 0; font-size: 34px; letter-spacing: -.02em; }
+    .sub { margin-top: 6px; color: #525252; }
+    .layout { margin-top: 14px; display: grid; grid-template-columns: 260px 1fr; gap: 12px; }
+    .panel { border: 1.5px solid #111; border-radius: 10px; padding: 12px; }
+    .menu { display: grid; gap: 8px; }
+    .item { padding: 9px 10px; border-radius: 8px; border: 1px solid #e5e5e5; }
+    .item.active { background: #111; color: #fff; border-color: #111; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e5e5e5; font-size: 14px; }
+    th { text-transform: uppercase; letter-spacing: .08em; font-size: 11px; color: #525252; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>Minimal Monochrome Suite</h1>
+      <div class="sub">No visual noise, dense information, and timeless B2B presentation.</div>
+      <div class="layout">
+        <aside class="panel menu">
+          <div class="item active">Dashboard</div>
+          <div class="item">Projects</div>
+          <div class="item">Keywords</div>
+          <div class="item">Positions</div>
+        </aside>
+        <section class="panel">
+          <table>
+            <thead><tr><th>Keyword</th><th>Position</th><th>Trend</th></tr></thead>
+            <tbody>
+              <tr><td>seo tools</td><td>#9</td><td>+2</td></tr>
+              <tr><td>rank tracker</td><td>#14</td><td>+1</td></tr>
+              <tr><td>audit report</td><td>#7</td><td>-1</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

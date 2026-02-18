@@ -51,19 +51,19 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
+          <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground">
             Projects
           </h1>
-          <p className="mt-1 text-zinc-500">
+          <p className="mt-2 text-lg text-zinc-500">
             Organize your sites and track keywords per project.
           </p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2.5 font-medium text-white hover:bg-[var(--accent-muted)]"
+          className="flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 font-medium text-white transition-colors hover:bg-[var(--accent-muted)]"
         >
           <Plus className="h-5 w-5" />
           Add Project
@@ -73,29 +73,29 @@ export default function ProjectsPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6"
+          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)]"
         >
-          <h3 className="font-semibold text-zinc-100">New Project</h3>
+          <h3 className="font-heading text-lg font-semibold text-foreground">New Project</h3>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm text-zinc-500">Name</label>
+              <label className="block text-sm font-medium text-zinc-600">Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="My Website"
-                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-zinc-900 px-4 py-2 text-zinc-100 placeholder:text-zinc-600"
+                className="mt-1 w-full"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm text-zinc-500">Domain</label>
+              <label className="block text-sm font-medium text-zinc-600">Domain</label>
               <input
                 type="text"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
                 placeholder="example.com"
-                className="mt-1 w-full rounded-lg border border-[var(--border)] bg-zinc-900 px-4 py-2 text-zinc-100 placeholder:text-zinc-600"
+                className="mt-1 w-full"
                 required
               />
             </div>
@@ -104,14 +104,14 @@ export default function ProjectsPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-[var(--accent)] px-4 py-2 font-medium text-white hover:bg-[var(--accent-muted)] disabled:opacity-50"
+              className="rounded-xl bg-[var(--accent)] px-4 py-2.5 font-medium text-white transition-colors hover:bg-[var(--accent-muted)] disabled:opacity-50"
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
             </button>
             <button
               type="button"
               onClick={() => setShowForm(false)}
-              className="rounded-lg border border-[var(--border)] px-4 py-2 text-zinc-400 hover:bg-white/5"
+              className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-zinc-600 transition-colors hover:bg-zinc-50"
             >
               Cancel
             </button>
@@ -124,30 +124,30 @@ export default function ProjectsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
         </div>
       ) : projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border)] bg-[var(--card)] py-16">
-          <FolderKanban className="h-12 w-12 text-zinc-600" />
-          <p className="mt-4 text-zinc-500">No projects yet</p>
-          <p className="mt-1 text-sm text-zinc-600">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)] py-16">
+          <FolderKanban className="h-12 w-12 text-zinc-400" />
+          <p className="mt-4 font-medium text-zinc-600">No projects yet</p>
+          <p className="mt-1 text-sm text-zinc-500">
             Add a project to organize keywords and audits
           </p>
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-white hover:bg-[var(--accent-muted)]"
+            className="mt-4 flex items-center gap-2 rounded-xl bg-[var(--accent)] px-4 py-2.5 font-medium text-white transition-colors hover:bg-[var(--accent-muted)]"
           >
             <Plus className="h-4 w-4" />
             Add Project
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
-              className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6 transition-colors hover:border-zinc-600"
+              className="block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)] transition-all duration-200 hover:border-zinc-300 hover:shadow-[var(--shadow)]"
             >
               <FolderKanban className="h-10 w-10 text-[var(--accent)]" />
-              <h3 className="mt-3 font-semibold text-zinc-100">{p.name}</h3>
+              <h3 className="mt-3 font-heading text-lg font-semibold text-foreground">{p.name}</h3>
               <p className="mt-1 text-sm text-zinc-500">{p.domain}</p>
             </Link>
           ))}

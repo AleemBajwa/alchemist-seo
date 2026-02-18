@@ -8,8 +8,10 @@ async function checkEnv() {
     missing.push("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
   if (!process.env.CLERK_SECRET_KEY?.trim()) missing.push("CLERK_SECRET_KEY");
   const hasDataForSEO =
-    !!process.env.DATA_FOR_SEO_LOGIN?.trim() &&
-    !!process.env.DATA_FOR_SEO_PASSWORD?.trim();
+    !!process.env.DATA_FOR_SEO_API_KEY?.trim() ||
+    !!process.env.DATAFORSEO_API_KEY?.trim() ||
+    (!!process.env.DATA_FOR_SEO_LOGIN?.trim() &&
+      !!process.env.DATA_FOR_SEO_PASSWORD?.trim());
   return { missing, hasDataForSEO };
 }
 
@@ -20,10 +22,10 @@ export default async function SetupPage() {
     <div className="min-h-screen bg-[var(--background)] p-8">
       <div className="mx-auto max-w-2xl space-y-10">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-zinc-100">
+          <h1 className="font-heading text-4xl font-semibold text-foreground">
             AlChemist_SEO – Setup
           </h1>
-          <p className="mt-2 text-zinc-500">
+          <p className="mt-2 text-lg text-zinc-500">
             Configure these services before delivering to your client.
           </p>
         </div>
@@ -44,15 +46,15 @@ export default async function SetupPage() {
           <ConfigItem
             name="DataForSEO"
             status={hasDataForSEO}
-            description="DATA_FOR_SEO_LOGIN and DATA_FOR_SEO_PASSWORD. Or add in Settings after sign-in."
+            description="DATA_FOR_SEO_API_KEY configured in server environment."
             link="https://dataforseo.com"
           />
         </div>
 
         {missing.length > 0 && (
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
-            <h3 className="font-semibold text-amber-400">Missing configuration</h3>
-            <p className="mt-2 text-sm text-zinc-400">
+          <div className="rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 p-6 shadow-[var(--shadow-sm)]">
+            <h3 className="font-heading text-lg font-semibold text-[var(--accent-muted)]">Missing configuration</h3>
+            <p className="mt-2 text-sm text-zinc-600">
               Add these to your .env file: {missing.join(", ")}
             </p>
             <p className="mt-2 text-sm text-zinc-500">
@@ -61,9 +63,9 @@ export default async function SetupPage() {
           </div>
         )}
 
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
-          <h3 className="font-semibold text-zinc-100">Deploy commands</h3>
-          <div className="mt-3 space-y-2 font-mono text-sm text-zinc-400">
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)]">
+          <h3 className="font-heading text-lg font-semibold text-foreground">Deploy commands</h3>
+          <div className="mt-3 space-y-2 font-mono text-sm text-zinc-600">
             <p>npm install</p>
             <p>npx prisma migrate deploy</p>
             <p>npm run build</p>
@@ -74,7 +76,7 @@ export default async function SetupPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--accent)] px-6 py-3 font-medium text-white hover:bg-[var(--accent-muted)]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--accent-muted)]"
           >
             Go to Dashboard
           </Link>
@@ -96,16 +98,16 @@ function ConfigItem({
   link: string;
 }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-6">
+    <div className="flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)]">
       <div
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-          status ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-800 text-zinc-500"
+          status ? "bg-emerald-100 text-emerald-600" : "bg-zinc-100 text-zinc-500"
         }`}
       >
         {status ? <Check className="h-5 w-5" /> : <X className="h-5 w-5" />}
       </div>
-      <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-zinc-100">{name}</h2>
+      <div className="min-w-0 flex-1">
+        <h2 className="font-heading text-lg font-semibold text-foreground">{name}</h2>
         <p className="mt-1 text-sm text-zinc-500">{description}</p>
         <a
           href={link}

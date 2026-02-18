@@ -1,5 +1,18 @@
 import { auth } from "@clerk/nextjs/server";
+import { NextRequest } from "next/server";
 import { prisma } from "./db";
+import { validateApiKey } from "./api-key";
+
+export async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
+  const { userId } = await auth();
+  if (userId) return userId;
+  const key =
+    request.headers.get("x-api-key") ??
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+    null;
+  const result = await validateApiKey(key);
+  return result?.userId ?? null;
+}
 
 export async function getCurrentUser() {
   const { userId } = await auth();

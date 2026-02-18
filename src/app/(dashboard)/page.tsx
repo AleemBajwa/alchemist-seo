@@ -15,7 +15,6 @@ export default async function DashboardPage() {
     include: {
       projects: true,
       auditRuns: true,
-      apiKeys: true,
     },
   });
 
@@ -27,26 +26,39 @@ export default async function DashboardPage() {
       : null;
     user = await prisma.user.create({
       data: { clerkId: userId, email, name },
-      include: { projects: true, auditRuns: true, apiKeys: true },
+      include: { projects: true, auditRuns: true },
     });
   }
 
   const projectsCount = user.projects.length;
   const auditsCount = user.auditRuns.length;
-  const hasApiKeys = !!(user.apiKeys.find((k) => k.provider === "dataforseo")?.login);
+  const hasApiKeys = !!(
+    process.env.DATA_FOR_SEO_API_KEY?.trim() ||
+    process.env.DATAFORSEO_API_KEY?.trim() ||
+    (process.env.DATA_FOR_SEO_LOGIN?.trim() &&
+      process.env.DATA_FOR_SEO_PASSWORD?.trim())
+  );
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-zinc-100">
-          Dashboard
+    <div className="space-y-6">
+      <div className="hero-shell p-6 md:p-8">
+        <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-cyan-300/20 blur-3xl" />
+        <span className="hero-kicker">Holographic SEO Command</span>
+        <h1 className="hero-title mt-4 max-w-4xl">
+          Run your SEO workflow inside a cinematic, high-depth control interface.
         </h1>
-        <p className="mt-1 text-zinc-500">
-          Your SEO command center. All tools require DataForSEO credentials.
+        <p className="mt-3 max-w-3xl text-[1.02rem] text-zinc-600">
+          Projects, keyword intelligence, technical audits, and ranking movement in one immersive analytics deck.
         </p>
+        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+          <span className="soft-badge">Live data · DataForSEO</span>
+          <span className="soft-badge">High-speed workflows</span>
+          <span className="soft-badge">Agency-ready</span>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="compact-grid sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Projects"
           value={projectsCount}
@@ -63,7 +75,7 @@ export default async function DashboardPage() {
           label="API Status"
           value={hasApiKeys ? "Connected" : "Not configured"}
           href="/settings"
-          description={hasApiKeys ? "DataForSEO ready" : "Add credentials"}
+          description={hasApiKeys ? "Managed by owner" : "Owner setup required"}
           highlight={!hasApiKeys}
         />
       </div>
@@ -73,14 +85,14 @@ export default async function DashboardPage() {
       <DashboardCharts />
 
       {!hasApiKeys && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
-          <h2 className="font-semibold text-amber-400">Setup required</h2>
-          <p className="mt-2 text-sm text-zinc-400">
-            Add your DataForSEO login and password in{" "}
-            <Link href="/settings" className="font-medium text-[var(--accent)] hover:underline">
+        <div className="panel border-fuchsia-400/40 bg-fuchsia-500/10 p-5">
+          <h2 className="font-heading text-lg font-semibold text-fuchsia-200">Setup required</h2>
+          <p className="mt-2 text-sm text-zinc-500">
+            DataForSEO is configured by the account owner in{" "}
+            <Link href="/settings" className="font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-muted)] hover:underline">
               Settings
             </Link>{" "}
-            to use keyword research, position tracking, and backlinks.
+            and server environment variables.
           </p>
         </div>
       )}
@@ -104,15 +116,17 @@ function StatCard({
   return (
     <Link
       href={href}
-      className={`rounded-xl border p-6 transition-colors hover:border-zinc-600 ${
-        highlight ? "border-amber-500/30 bg-amber-500/5" : "border-[var(--border)] bg-[var(--card)]"
+      className={`group block rounded-2xl border p-4 shadow-[var(--shadow-sm)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[var(--shadow-lg)] ${
+        highlight
+          ? "border-fuchsia-400/40 bg-fuchsia-500/10 hover:border-fuchsia-300/70"
+          : "border-[var(--border)] bg-[var(--card)] hover:border-cyan-400/45"
       }`}
     >
-      <p className="text-sm text-zinc-500">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${highlight ? "text-amber-400" : "text-zinc-100"}`}>
+      <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">{label}</p>
+      <p className={`mt-1.5 font-heading text-[1.65rem] font-semibold ${highlight ? "text-fuchsia-200" : "text-foreground"}`}>
         {value}
       </p>
-      <p className="mt-1 text-sm text-zinc-600">{description}</p>
+      <p className="mt-1 text-sm text-zinc-500">{description}</p>
     </Link>
   );
 }

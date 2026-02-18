@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 10 - Isometric Surface</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, sans-serif;
+      background: #0a0f1f;
+      color: #eef2ff;
+      overflow: hidden;
+    }
+    .iso {
+      position: fixed;
+      inset: -40%;
+      pointer-events: none;
+      transform: rotateX(62deg) rotateZ(45deg);
+      background-image:
+        linear-gradient(rgba(99, 102, 241, 0.2) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.2) 1px, transparent 1px);
+      background-size: 60px 60px;
+      animation: shift 14s linear infinite;
+    }
+    .lights {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(500px 260px at 18% 15%, rgba(79, 70, 229, 0.26), transparent 62%),
+        radial-gradient(620px 300px at 78% 72%, rgba(236, 72, 153, 0.2), transparent 62%);
+      filter: blur(24px);
+      animation: pulse 10s ease-in-out infinite;
+    }
+    .wrap { position: relative; z-index: 2; max-width: 1100px; margin: 0 auto; padding: 30px; }
+    .board {
+      border-radius: 18px;
+      border: 1px solid #312e81;
+      background: rgba(15, 23, 42, 0.7);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      padding: 24px;
+      box-shadow: 0 22px 52px rgba(0, 0, 0, 0.56);
+    }
+    h1 { margin: 0 0 8px; font-size: 40px; }
+    p { margin: 0; color: #c7d2fe; max-width: 760px; }
+    .surfaces {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      align-items: stretch;
+    }
+    .surface {
+      border: 1px solid rgba(129, 140, 248, 0.34);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.92));
+      padding: 14px;
+      transform: perspective(800px) rotateX(10deg) rotateY(-8deg);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .surface:hover {
+      transform: perspective(800px) rotateX(3deg) rotateY(-2deg) translateY(-4px);
+      box-shadow: 0 20px 36px rgba(99, 102, 241, 0.3);
+    }
+    .sk { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: #a5b4fc; }
+    .sv { margin-top: 9px; font-size: 30px; font-weight: 700; }
+    @keyframes shift { from { background-position: 0 0, 0 0; } to { background-position: 0 60px, 60px 0; } }
+    @keyframes pulse { 0%,100% { opacity: 0.9; } 50% { opacity: 0.55; } }
+  </style>
+</head>
+<body>
+  <div class="iso"></div>
+  <div class="lights"></div>
+  <div class="wrap">
+    <section class="board">
+      <h1>Isometric Surface Language</h1>
+      <p>Architectural 3D planes with animated foundations and high-end technical expression.</p>
+      <div class="surfaces">
+        <div class="surface"><div class="sk">Forecasted Traffic</div><div class="sv">+44%</div></div>
+        <div class="surface"><div class="sk">Critical Fixes</div><div class="sv">19</div></div>
+        <div class="surface"><div class="sk">Visibility Score</div><div class="sv">82</div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

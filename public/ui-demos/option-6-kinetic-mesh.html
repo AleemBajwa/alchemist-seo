@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 6 - Kinetic Mesh 3D</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: Inter, system-ui, sans-serif;
+      color: #ecfeff;
+      background: #020617;
+    }
+    .bg,
+    .bg::before,
+    .bg::after {
+      position: fixed;
+      inset: -20%;
+      content: "";
+      pointer-events: none;
+    }
+    .bg {
+      background:
+        radial-gradient(640px 340px at 20% 30%, rgba(34, 211, 238, 0.22), transparent 60%),
+        radial-gradient(680px 380px at 80% 70%, rgba(167, 139, 250, 0.18), transparent 62%);
+      animation: driftA 16s ease-in-out infinite alternate;
+      transform: perspective(900px) rotateX(10deg) rotateY(-8deg);
+    }
+    .bg::before {
+      background-image:
+        linear-gradient(rgba(34, 211, 238, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.12) 1px, transparent 1px);
+      background-size: 46px 46px;
+      transform: translateZ(0) rotate(8deg) scale(1.2);
+      animation: driftB 24s linear infinite;
+    }
+    .bg::after {
+      background: conic-gradient(from 45deg, rgba(14, 116, 144, 0.2), rgba(168, 85, 247, 0.16), rgba(14, 116, 144, 0.2));
+      filter: blur(70px);
+      animation: driftC 18s ease-in-out infinite;
+    }
+    .wrap {
+      position: relative;
+      z-index: 2;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+    .panel {
+      border: 1px solid #155e75;
+      border-radius: 18px;
+      background: rgba(3, 18, 31, 0.76);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      padding: 24px;
+      transform-style: preserve-3d;
+      box-shadow: 0 24px 52px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(34, 211, 238, 0.16);
+    }
+    h1 { margin: 0 0 8px; font-size: 40px; letter-spacing: -0.02em; }
+    p { margin: 0; color: #a5f3fc; max-width: 760px; }
+    .cards {
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .card {
+      border: 1px solid #164e63;
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(8, 32, 50, 0.9), rgba(7, 20, 33, 0.88));
+      padding: 14px;
+      transform: perspective(650px) rotateX(8deg);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 14px 30px rgba(2, 6, 23, 0.42);
+    }
+    .card:hover {
+      transform: perspective(650px) rotateX(0deg) translateY(-4px);
+      box-shadow: 0 20px 40px rgba(34, 211, 238, 0.24);
+    }
+    .k { font-size: 12px; color: #67e8f9; text-transform: uppercase; letter-spacing: 0.08em; }
+    .v { margin-top: 7px; font-size: 26px; font-weight: 700; }
+    @keyframes driftA { from { transform: perspective(900px) rotateX(8deg) rotateY(-6deg) translateX(-2%); } to { transform: perspective(900px) rotateX(12deg) rotateY(6deg) translateX(2%); } }
+    @keyframes driftB { from { transform: rotate(8deg) translateY(0); } to { transform: rotate(8deg) translateY(-46px); } }
+    @keyframes driftC { 0%,100% { transform: translate(-6%, -4%) scale(1.06); } 50% { transform: translate(5%, 3%) scale(0.96); } }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="wrap">
+    <section class="panel">
+      <h1>Kinetic Mesh Interface</h1>
+      <p>Animated grid field, volumetric lighting, and card parallax for a futuristic analyst cockpit.</p>
+      <div class="cards">
+        <div class="card"><div class="k">Signal Quality</div><div class="v">98.2</div></div>
+        <div class="card"><div class="k">AI Opportunities</div><div class="v">143</div></div>
+        <div class="card"><div class="k">Rank Velocity</div><div class="v">+27%</div></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

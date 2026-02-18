@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Option 4 - Neon Tech</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: "Sora", Inter, system-ui, sans-serif; color: #dbeafe;
+      background: radial-gradient(900px 400px at 10% -10%, rgba(34,211,238,.18), transparent 55%), #020617;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 28px; }
+    .hero {
+      border: 1px solid #0e7490; border-radius: 18px; padding: 22px; background: #03121f;
+      box-shadow: 0 0 0 1px rgba(34, 211, 238, .16), 0 16px 36px rgba(0, 0, 0, .55);
+    }
+    h1 { margin: 0 0 8px; font-size: 36px; color: #67e8f9; }
+    p { margin: 0; color: #94a3b8; }
+    .row { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .box { border: 1px solid #164e63; border-radius: 12px; background: #082032; padding: 12px; }
+    .box .name { font-size: 12px; color: #7dd3fc; text-transform: uppercase; letter-spacing: .08em; }
+    .box .num { margin-top: 6px; font-size: 24px; font-weight: 700; color: #a5f3fc; }
+    .timeline { margin-top: 12px; height: 120px; border: 1px dashed #155e75; border-radius: 12px; position: relative; overflow: hidden; }
+    .beam { position: absolute; inset: auto 0 20px 0; height: 2px; background: linear-gradient(90deg, transparent, #22d3ee, transparent); animation: pulse 2.5s linear infinite; }
+    @keyframes pulse { from { transform: translateX(-40%);} to { transform: translateX(40%);} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Neon Performance Grid</h1>
+      <p>A high-tech visual language for users who want fast, futuristic intelligence.</p>
+      <div class="row">
+        <div class="box"><div class="name">Crawl Jobs</div><div class="num">124</div></div>
+        <div class="box"><div class="name">Alerts</div><div class="num">07</div></div>
+        <div class="box"><div class="name">Win Rate</div><div class="num">81%</div></div>
+        <div class="box"><div class="name">Health</div><div class="num">A-</div></div>
+      </div>
+      <div class="timeline"><div class="beam"></div></div>
+    </section>
+  </div>
+</body>
+</html>

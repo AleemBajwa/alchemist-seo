@@ -38,8 +38,7 @@ Follow these steps to deploy and hand over to your client.
    | DATABASE_URL | Your Neon connection string |
    | NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | Your Clerk publishable key |
    | CLERK_SECRET_KEY | Your Clerk secret key |
-   | DATA_FOR_SEO_LOGIN | (Optional) Or add in Settings later |
-   | DATA_FOR_SEO_PASSWORD | (Optional) Or add in Settings later |
+   | DATA_FOR_SEO_API_KEY | DataForSEO API key (owner-managed) |
 
 6. Click **Deploy**
 7. Wait for the build to finish
@@ -91,7 +90,7 @@ If your project is still named `seo-tools` and you want the URL to match the app
    - Live URL
    - `CLIENT_HANDOVER.md` (or a short summary)
 2. Client signs up as first user
-3. (Optional) Client adds DataForSEO in Settings for full features
+3. DataForSEO usage is enabled from owner-managed server env configuration
 
 ---
 

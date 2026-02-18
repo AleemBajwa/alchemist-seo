@@ -37,16 +37,14 @@ DATABASE_URL="postgresql://user:password@ep-xxx.neon.tech/neondb?sslmode=require
 
 1. Go to **https://dataforseo.com** and sign up.
 2. Add funds (pay-as-you-go, small amount is fine to start).
-3. Go to **API** → **Credentials**.
-4. Copy your **Login** and **Password**.
+3. Go to **API** and copy your **API key/token**.
 5. Add to `.env`:
 
 ```
-DATA_FOR_SEO_LOGIN=your_login
-DATA_FOR_SEO_PASSWORD=your_password
+DATA_FOR_SEO_API_KEY=your_dataforseo_api_key
 ```
 
-**Alternative:** You can skip env and add these in **Settings** inside the app after sign-in.
+This key should be set by the account owner in server environment variables.
 
 ---
 
@@ -56,10 +54,9 @@ Open `d:\Semrush\seo-tools\.env` and ensure it looks like this (with your real v
 
 ```
 DATABASE_URL="postgresql://user:pass@ep-xxx.neon.tech/neondb?sslmode=require"
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
-CLERK_SECRET_KEY=sk_live_xxxxx
-DATA_FOR_SEO_LOGIN=your@email.com
-DATA_FOR_SEO_PASSWORD=your_password
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+DATA_FOR_SEO_API_KEY=your_dataforseo_api_key
 ```
 
 ---
@@ -99,7 +96,7 @@ Open **http://localhost:3000**. Sign up with your email to create the first acco
 
 - [ ] Neon: DATABASE_URL in .env
 - [ ] Clerk: both keys in .env
-- [ ] DataForSEO: login and password in .env (or add in Settings)
+- [ ] DataForSEO: API key in .env
 - [ ] Ran `npx prisma migrate deploy`
 - [ ] Ran `npm run build`
 - [ ] Ran `npm run dev` and signed up

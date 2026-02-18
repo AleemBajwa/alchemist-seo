@@ -33,9 +33,8 @@ The build requires all environment variables to be set. Add them to `.env` befor
 
 1. Sign up at [dataforseo.com](https://dataforseo.com)
 2. Add funds (pay-as-you-go)
-3. Copy Login and Password from dashboard
-4. Add as `DATA_FOR_SEO_LOGIN` and `DATA_FOR_SEO_PASSWORD`
-   - Or: client can add in Settings after sign-in
+3. Copy API key/token from dashboard
+4. Add as `DATA_FOR_SEO_API_KEY`
 
 ## Step 4: Deploy to Vercel
 
@@ -45,8 +44,7 @@ The build requires all environment variables to be set. Add them to `.env` befor
    - `DATABASE_URL`
    - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
    - `CLERK_SECRET_KEY`
-   - `DATA_FOR_SEO_LOGIN` (optional if using Settings)
-   - `DATA_FOR_SEO_PASSWORD` (optional if using Settings)
+   - `DATA_FOR_SEO_API_KEY`
 4. Deploy
 
 ## Step 5: Run Migrations
@@ -63,8 +61,7 @@ Or add a build script that runs migrations (Vercel supports `prisma migrate depl
 
 1. Share the deployed URL
 2. Create the first admin user (sign up)
-3. If not using env vars: have client add DataForSEO in Settings
-4. Share `/setup` for configuration status
+3. Share `/setup` for configuration status
 
 ## Environment Variables Summary
 
@@ -73,7 +70,5 @@ Or add a build script that runs migrations (Vercel supports `prisma migrate depl
 | DATABASE_URL | Yes | Neon PostgreSQL connection string |
 | NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | Yes | From Clerk dashboard |
 | CLERK_SECRET_KEY | Yes | From Clerk dashboard |
-| DATA_FOR_SEO_LOGIN | Yes* | From DataForSEO or Settings |
-| DATA_FOR_SEO_PASSWORD | Yes* | From DataForSEO or Settings |
+| DATA_FOR_SEO_API_KEY | Yes | From DataForSEO |
 
-*Can be added in Settings UI after sign-in.
