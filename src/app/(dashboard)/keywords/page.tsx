@@ -46,7 +46,25 @@ const COUNTRY_OPTIONS = [
   { value: "uk", label: "United Kingdom" },
   { value: "ca", label: "Canada" },
   { value: "au", label: "Australia" },
+  { value: "de", label: "Germany" },
+  { value: "fr", label: "France" },
+  { value: "it", label: "Italy" },
+  { value: "es", label: "Spain" },
+  { value: "nl", label: "Netherlands" },
+  { value: "se", label: "Sweden" },
+  { value: "no", label: "Norway" },
+  { value: "dk", label: "Denmark" },
+  { value: "pl", label: "Poland" },
+  { value: "br", label: "Brazil" },
+  { value: "mx", label: "Mexico" },
+  { value: "ar", label: "Argentina" },
   { value: "in", label: "India" },
+  { value: "jp", label: "Japan" },
+  { value: "kr", label: "South Korea" },
+  { value: "sg", label: "Singapore" },
+  { value: "ae", label: "UAE" },
+  { value: "za", label: "South Africa" },
+  { value: "nz", label: "New Zealand" },
 ];
 
 const LANGUAGE_OPTIONS = [
@@ -55,6 +73,18 @@ const LANGUAGE_OPTIONS = [
   { value: "de", label: "German" },
   { value: "fr", label: "French" },
   { value: "it", label: "Italian" },
+  { value: "pt", label: "Portuguese" },
+  { value: "nl", label: "Dutch" },
+  { value: "pl", label: "Polish" },
+  { value: "ru", label: "Russian" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "zh", label: "Chinese" },
+  { value: "ar", label: "Arabic" },
+  { value: "hi", label: "Hindi" },
+  { value: "sv", label: "Swedish" },
+  { value: "no", label: "Norwegian" },
+  { value: "da", label: "Danish" },
 ];
 
 function KeywordsContent() {
@@ -224,11 +254,28 @@ function KeywordsContent() {
     const best =
       results.find((r) => r.keyword.toLowerCase() === seed) ?? results[0];
     const monthly = best.monthlySearches ?? [];
+    if (monthly.length === 0) return [];
+    
     const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return monthly.map((entry) => ({
-      month: `${monthLabels[Math.max(0, Math.min(11, entry.month - 1))]} ${entry.year}`,
-      volume: entry.search_volume,
-    }));
+    const dataMap = new Map<string, number>();
+    monthly.forEach((entry) => {
+      const key = `${entry.year}-${String(entry.month).padStart(2, "0")}`;
+      dataMap.set(key, entry.search_volume);
+    });
+    
+    const now = new Date();
+    const last12Months: Array<{ month: string; volume: number }> = [];
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const key = `${year}-${String(month).padStart(2, "0")}`;
+      last12Months.push({
+        month: `${monthLabels[month - 1]} ${year}`,
+        volume: dataMap.get(key) ?? 0,
+      });
+    }
+    return last12Months;
   })();
 
   const keywordOverview = (() => {
@@ -402,33 +449,74 @@ function KeywordsContent() {
           )}
 
           {trendData.length > 0 && (
-            <div className="panel p-4">
-              <h3 className="mb-3 font-heading text-lg font-semibold text-foreground">12-Month Trend</h3>
-              <div className="h-56">
+            <div className="panel p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-heading text-lg font-semibold text-foreground">12-Month Search Volume Trend</h3>
+                <span className="text-xs text-zinc-500">
+                  {trendData.filter((d) => d.volume > 0).length} months with data
+                </span>
+              </div>
+              <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData}>
+                  <LineChart data={trendData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3b2f68" vertical={false} />
-                    <XAxis dataKey="month" stroke="#b4b0d6" tickLine={false} axisLine={false} fontSize={11} />
-                    <YAxis stroke="#b4b0d6" tickLine={false} axisLine={false} fontSize={11} />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#b4b0d6" 
+                      tickLine={false} 
+                      axisLine={false} 
+                      fontSize={10}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      stroke="#b4b0d6" 
+                      tickLine={false} 
+                      axisLine={false} 
+                      fontSize={11}
+                      tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)}
+                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#18122f",
                         border: "1px solid var(--border)",
                         borderRadius: "12px",
+                        padding: "8px 12px",
                       }}
                       formatter={(value: number | undefined) => [Number(value ?? 0).toLocaleString(), "Search volume"]}
+                      labelStyle={{ color: "#b4b0d6", marginBottom: "4px" }}
                     />
-                    <Line type="monotone" dataKey="volume" stroke="#22d3ee" strokeWidth={2} dot={false} />
+                    <Line 
+                      type="monotone" 
+                      dataKey="volume" 
+                      stroke="#22d3ee" 
+                      strokeWidth={2.5} 
+                      dot={{ fill: "#22d3ee", r: 3 }}
+                      activeDot={{ r: 5 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
           )}
 
-          <div className="grid gap-3 md:grid-cols-3">
-            <SuggestionCard title="Long-tail Suggestions" items={suggestionBuckets.longTail} />
-            <SuggestionCard title="Question Keywords" items={suggestionBuckets.questions} />
-            <SuggestionCard title="Semantic / LSI" items={suggestionBuckets.semantic} />
+          <div className="grid gap-4 md:grid-cols-3">
+            <SuggestionCard 
+              title="Long-tail Suggestions" 
+              items={suggestionBuckets.longTail}
+              description={`${suggestionBuckets.longTail.length} keywords with 4+ words`}
+            />
+            <SuggestionCard 
+              title="Question Keywords" 
+              items={suggestionBuckets.questions}
+              description={`${suggestionBuckets.questions.length} question-based queries`}
+            />
+            <SuggestionCard 
+              title="Semantic / LSI" 
+              items={suggestionBuckets.semantic}
+              description={`${suggestionBuckets.semantic.length} semantically related terms`}
+            />
           </div>
 
           {suggestionBuckets.related.length > 0 && (
@@ -625,17 +713,21 @@ function KeywordsContent() {
               type="button"
               onClick={() => {
                 const workbook = XLSX.utils.book_new();
+                
+                // Keywords sheet
                 const keywordRows = results.map((r) => ({
                   Keyword: r.keyword,
                   Volume: r.volume,
                   Difficulty: `${r.difficulty}%`,
                   CPC: Number(r.cpc.toFixed(2)),
                   Competition: `${Math.round((r.competition ?? 0) * 100)}%`,
+                  Intent: intentMap[r.keyword] || "",
                   Tags: (tagMap[r.keyword] ?? []).join(" | "),
                 }));
                 const keywordsSheet = XLSX.utils.json_to_sheet(keywordRows);
                 XLSX.utils.book_append_sheet(workbook, keywordsSheet, "Keywords");
 
+                // Clusters sheet
                 if (keywordClusters.length) {
                   const clusterRows = keywordClusters.flatMap((cluster) =>
                     cluster.keywords.map((k) => ({
@@ -643,10 +735,76 @@ function KeywordsContent() {
                       Keyword: k.keyword,
                       Volume: k.volume,
                       Difficulty: `${k.difficulty}%`,
+                      "Total Cluster Volume": cluster.totalVolume,
+                      "Avg Cluster Difficulty": `${cluster.avgDifficulty}%`,
                     }))
                   );
                   const clustersSheet = XLSX.utils.json_to_sheet(clusterRows);
                   XLSX.utils.book_append_sheet(workbook, clustersSheet, "Clusters");
+                }
+
+                // Monthly trend sheet
+                if (trendData.length > 0) {
+                  const seed = keyword.trim().toLowerCase();
+                  const best = results.find((r) => r.keyword.toLowerCase() === seed) ?? results[0];
+                  const monthly = best.monthlySearches ?? [];
+                  if (monthly.length > 0) {
+                    const trendRows = monthly.map((entry) => ({
+                      Year: entry.year,
+                      Month: entry.month,
+                      "Search Volume": entry.search_volume,
+                    }));
+                    const trendSheet = XLSX.utils.json_to_sheet(trendRows);
+                    XLSX.utils.book_append_sheet(workbook, trendSheet, "Monthly Trend");
+                  }
+                }
+
+                // Grouped suggestions sheet
+                if (suggestions) {
+                  const suggestionsRows: Array<{
+                    Type: string;
+                    Keyword: string;
+                    Volume: number;
+                    Difficulty: string;
+                    CPC: number;
+                  }> = [];
+                  if (suggestions.longTail?.length) {
+                    suggestions.longTail.forEach((k) => {
+                      suggestionsRows.push({
+                        Type: "Long-tail",
+                        Keyword: k.keyword,
+                        Volume: k.volume,
+                        Difficulty: `${k.difficulty}%`,
+                        CPC: k.cpc,
+                      });
+                    });
+                  }
+                  if (suggestions.questions?.length) {
+                    suggestions.questions.forEach((k) => {
+                      suggestionsRows.push({
+                        Type: "Question",
+                        Keyword: k.keyword,
+                        Volume: k.volume,
+                        Difficulty: `${k.difficulty}%`,
+                        CPC: k.cpc,
+                      });
+                    });
+                  }
+                  if (suggestions.semantic?.length) {
+                    suggestions.semantic.forEach((k) => {
+                      suggestionsRows.push({
+                        Type: "Semantic/LSI",
+                        Keyword: k.keyword,
+                        Volume: k.volume,
+                        Difficulty: `${k.difficulty}%`,
+                        CPC: k.cpc,
+                      });
+                    });
+                  }
+                  if (suggestionsRows.length > 0) {
+                    const suggestionsSheet = XLSX.utils.json_to_sheet(suggestionsRows);
+                    XLSX.utils.book_append_sheet(workbook, suggestionsSheet, "Grouped Suggestions");
+                  }
                 }
 
                 XLSX.writeFile(
@@ -812,16 +970,23 @@ function KeywordsContent() {
   );
 }
 
-function SuggestionCard({ title, items }: { title: string; items: KeywordResult[] }) {
+function SuggestionCard({ title, items, description }: { title: string; items: KeywordResult[]; description?: string }) {
   return (
     <div className="panel p-4">
-      <h3 className="mb-3 font-heading text-base font-semibold text-foreground">{title}</h3>
+      <div className="mb-3">
+        <h3 className="font-heading text-base font-semibold text-foreground">{title}</h3>
+        {description && <p className="mt-1 text-xs text-zinc-500">{description}</p>}
+      </div>
       {items.length ? (
         <div className="flex flex-wrap gap-2">
           {items.map((item) => (
-            <span key={item.keyword} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-xs text-cyan-100">
+            <div
+              key={item.keyword}
+              className="group relative rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 text-xs text-cyan-100 transition-all hover:border-cyan-400/50 hover:bg-cyan-500/20"
+              title={`Volume: ${item.volume.toLocaleString()} | Difficulty: ${item.difficulty}% | CPC: $${item.cpc.toFixed(2)}`}
+            >
               {item.keyword}
-            </span>
+            </div>
           ))}
         </div>
       ) : (
@@ -833,9 +998,9 @@ function SuggestionCard({ title, items }: { title: string; items: KeywordResult[
 
 function OverviewCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="panel p-4">
+    <div className="panel p-5 transition-all hover:shadow-lg">
       <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className="mt-2 font-heading text-2xl font-semibold text-foreground">{value}</p>
+      <p className="mt-3 font-heading text-2xl font-semibold text-foreground">{value}</p>
     </div>
   );
 }

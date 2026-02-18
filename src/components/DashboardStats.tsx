@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, FileSearch, BarChart3, FolderKanban, Clock, Sparkles } from "lucide-react";
+import { Search, FileSearch, BarChart3, FolderKanban, Clock, Sparkles, Globe, GitCompare } from "lucide-react";
 import Link from "next/link";
 
 const stats = [
@@ -10,6 +10,20 @@ const stats = [
     icon: FolderKanban,
     href: "/projects",
     iconClasses: "bg-[var(--accent)]/15 text-[var(--accent-muted)]",
+  },
+  {
+    label: "Domain Overview",
+    description: "Analyze domain rank, ETV, keywords & backlinks",
+    icon: Globe,
+    href: "/domain",
+    iconClasses: "bg-emerald-500/15 text-emerald-300",
+  },
+  {
+    label: "Keyword Gap",
+    description: "Compare domains for overlapping & unique keywords",
+    icon: GitCompare,
+    href: "/domain/gap",
+    iconClasses: "bg-teal-500/15 text-teal-300",
   },
   {
     label: "Keyword Research",
@@ -27,7 +41,7 @@ const stats = [
   },
   {
     label: "AI Content",
-    description: "Generate SEO-ready long-form content",
+    description: "Generate SEO-ready long-form content & briefs",
     icon: Sparkles,
     href: "/content",
     iconClasses: "bg-fuchsia-500/15 text-fuchsia-300",

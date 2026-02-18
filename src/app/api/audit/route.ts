@@ -53,9 +53,15 @@ export async function POST(request: NextRequest) {
     let crawlSource: "single" | "sitemap" | "bfs" = "single";
 
     if (crawlType === "fullsite") {
-      const crawled = await crawlSiteUrls({ startUrl: url, maxPages });
-      urlsToAudit = crawled.urls;
-      crawlSource = crawled.source;
+      try {
+        const crawled = await crawlSiteUrls({ startUrl: url, maxPages: maxPages ?? 25 });
+        urlsToAudit = crawled.urls.length > 0 ? crawled.urls : [url];
+        crawlSource = crawled.source;
+      } catch (crawlError) {
+        console.error("Crawl error:", crawlError);
+        urlsToAudit = [url];
+        crawlSource = "single";
+      }
     }
 
     const results: {
@@ -73,8 +79,30 @@ export async function POST(request: NextRequest) {
       };
     }[] = [];
     for (const u of urlsToAudit) {
-      const r = await auditSinglePage(u, focusKeyword);
-      results.push({ url: u, ...r });
+      try {
+        const r = await auditSinglePage(u, focusKeyword);
+        results.push({ url: u, ...r });
+      } catch (pageError) {
+        console.error(`Failed to audit ${u}:`, pageError);
+        results.push({
+          url: u,
+          score: 0,
+          issues: [{
+            type: "error",
+            category: "Crawl",
+            message: "Failed to audit this page",
+            details: pageError instanceof Error ? pageError.message : "Unknown error",
+            weight: 100,
+          }],
+        });
+      }
+    }
+
+    if (results.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "AUDIT_FAILED", message: "No pages could be audited" },
+        { status: 500 }
+      );
     }
 
     const avgScore = Math.round(
@@ -109,16 +137,38 @@ export async function POST(request: NextRequest) {
         weight: issue.weight,
       }));
 
+    let technicalSummary: {
+      crawlSource: string;
+      orphanPageUrls: string[];
+      redirectChainExamples: string[];
+      duplicateTitleGroups: Array<{ title: string; count: number; urls: string[] }>;
+      duplicateMetaGroups: Array<{ meta: string; count: number; urls: string[] }>;
+    } | undefined;
+    let orphanPageUrls: string[] = [];
+    let duplicateTitleGroups: Array<{ title: string; count: number; urls: string[] }> = [];
+    let duplicateMetaGroups: Array<{ meta: string; count: number; urls: string[] }> = [];
+
     if (crawlType === "fullsite" && results.length > 1) {
       const titleCounts = new Map<string, number>();
       const metaCounts = new Map<string, number>();
+      const titleToUrls = new Map<string, string[]>();
+      const metaToUrls = new Map<string, string[]>();
       const contentCounts = new Map<string, number>();
       for (const r of results) {
+        const normUrl = normalizeAuditUrl(r.url);
         const title = r.signals?.title?.trim().toLowerCase();
         const meta = r.signals?.metaDescription?.trim().toLowerCase();
         const content = r.signals?.contentFingerprint?.trim();
-        if (title) titleCounts.set(title, (titleCounts.get(title) ?? 0) + 1);
-        if (meta) metaCounts.set(meta, (metaCounts.get(meta) ?? 0) + 1);
+        if (title) {
+          titleCounts.set(title, (titleCounts.get(title) ?? 0) + 1);
+          if (!titleToUrls.has(title)) titleToUrls.set(title, []);
+          titleToUrls.get(title)!.push(normUrl);
+        }
+        if (meta) {
+          metaCounts.set(meta, (metaCounts.get(meta) ?? 0) + 1);
+          if (!metaToUrls.has(meta)) metaToUrls.set(meta, []);
+          metaToUrls.get(meta)!.push(normUrl);
+        }
         if (content) contentCounts.set(content, (contentCounts.get(content) ?? 0) + 1);
       }
 
@@ -223,6 +273,14 @@ export async function POST(request: NextRequest) {
         finalScore = Math.max(0, finalScore - 6);
       }
 
+      duplicateTitleGroups = [...titleToUrls.entries()]
+        .filter(([, urls]) => urls.length > 1)
+        .map(([title, urls]) => ({ title, count: urls.length, urls }));
+      duplicateMetaGroups = [...metaToUrls.entries()]
+        .filter(([, urls]) => urls.length > 1)
+        .map(([meta, urls]) => ({ meta, count: urls.length, urls }));
+      orphanPageUrls = orphanPages.map(([p]) => p);
+
       let nearDuplicatePairs = 0;
       const nearDuplicateExamples: string[] = [];
       for (let i = 0; i < results.length; i++) {
@@ -266,25 +324,30 @@ export async function POST(request: NextRequest) {
     let longRedirectChains = 0;
     const chainExamples: string[] = [];
     for (const page of redirectTraceSample) {
-      const trace = await traceRedirectChain(page.url, 8);
-      if (trace.hops > 0) {
-        redirectingPages++;
-        if (trace.hops >= 2) {
-          longRedirectChains++;
+      try {
+        const trace = await traceRedirectChain(page.url, 8);
+        if (trace.hops > 0) {
+          redirectingPages++;
+          if (trace.hops >= 2) {
+            longRedirectChains++;
+          }
+          if (chainExamples.length < 3) {
+            chainExamples.push(trace.chain.join(" -> "));
+          }
         }
-        if (chainExamples.length < 3) {
-          chainExamples.push(trace.chain.join(" -> "));
+        if (trace.hasLoop) {
+          aggregatedIssues.push({
+            type: "error",
+            category: "Technical",
+            message: "Potential redirect loop detected",
+            details: `Redirect trace sample: ${trace.chain.join(" -> ")}`,
+            weight: 12,
+          });
+          finalScore = Math.max(0, finalScore - 8);
         }
-      }
-      if (trace.hasLoop) {
-        aggregatedIssues.push({
-          type: "error",
-          category: "Technical",
-          message: "Potential redirect loop detected",
-          details: `Redirect trace sample: ${trace.chain.join(" -> ")}`,
-          weight: 12,
-        });
-        finalScore = Math.max(0, finalScore - 8);
+      } catch {
+        // Skip redirect trace if it fails
+        continue;
       }
     }
 
@@ -309,10 +372,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const [mobileMetrics, desktopMetrics] = await Promise.all([
-      getPageSpeedMetrics(url, "mobile"),
-      getPageSpeedMetrics(url, "desktop"),
-    ]);
+    if (crawlType === "fullsite" && results.length > 1) {
+      technicalSummary = {
+        crawlSource,
+        orphanPageUrls,
+        redirectChainExamples: chainExamples,
+        duplicateTitleGroups,
+        duplicateMetaGroups,
+      };
+    }
+
+    let mobileMetrics: Awaited<ReturnType<typeof getPageSpeedMetrics>> = null;
+    let desktopMetrics: Awaited<ReturnType<typeof getPageSpeedMetrics>> = null;
+    try {
+      [mobileMetrics, desktopMetrics] = await Promise.all([
+        getPageSpeedMetrics(url, "mobile"),
+        getPageSpeedMetrics(url, "desktop"),
+      ]);
+    } catch {
+      // PageSpeed metrics are optional, continue without them
+    }
 
     const pageSpeedIssues: AuditIssue[] = [];
 
@@ -428,6 +507,7 @@ export async function POST(request: NextRequest) {
         pagesAudited: results.length,
         crawlType,
         crawlSource,
+        technicalSummary: technicalSummary ?? undefined,
         pageResults: crawlType === "fullsite" ? results : undefined,
         pageSpeed: {
           mobile: mobileMetrics,

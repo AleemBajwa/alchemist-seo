@@ -138,6 +138,12 @@ select {
   box-shadow: var(--shadow-sm);
 }
 
+/* Dropdown options: dark text on light background for readability */
+select option {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
 .input-premium::placeholder,
 input::placeholder {
   color: #8f89b8;

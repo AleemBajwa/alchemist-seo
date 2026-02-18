@@ -11,6 +11,14 @@ type AuditIssue = {
   details?: string;
 };
 
+type TechnicalSummary = {
+  crawlSource: string;
+  orphanPageUrls: string[];
+  redirectChainExamples: string[];
+  duplicateTitleGroups: Array<{ title: string; count: number; urls: string[] }>;
+  duplicateMetaGroups: Array<{ meta: string; count: number; urls: string[] }>;
+};
+
 type AuditResult = {
   url: string;
   score: number;
@@ -18,6 +26,8 @@ type AuditResult = {
   issues: AuditIssue[];
   pagesAudited?: number;
   crawlType?: string;
+  crawlSource?: string;
+  technicalSummary?: TechnicalSummary;
   pageSpeed?: {
     mobile: {
       strategy: "mobile" | "desktop";
@@ -50,6 +60,7 @@ function AuditContent() {
   const [focusKeyword, setFocusKeyword] = useState("");
   const [projectId, setProjectId] = useState(projectIdParam || "");
   const [crawlType, setCrawlType] = useState<"single" | "fullsite">("single");
+  const [maxPages, setMaxPages] = useState(25);
 
   useEffect(() => {
     if (urlParam) {
@@ -89,7 +100,7 @@ function AuditContent() {
           projectId: projectId || undefined,
           focusKeyword: focusKeyword.trim() || undefined,
           crawlType,
-          maxPages: 25,
+          maxPages: crawlType === "fullsite" ? maxPages : undefined,
         }),
       });
       const data = await res.json();
@@ -138,7 +149,7 @@ function AuditContent() {
           Site Audit
         </h1>
         <p className="mt-2 text-lg text-zinc-500">
-          Crawl any URL and get instant SEO recommendations. Checks titles, meta, mobile, and more.
+          Comprehensive SEO audit: single page or full-site crawl via sitemap. Checks titles, meta, Core Web Vitals, mobile, images, redirects, orphan pages, duplicates, and internal linking.
         </p>
       </div>
 
@@ -199,15 +210,32 @@ function AuditContent() {
           )}
         </button>
         </div>
-        <div className="relative max-w-xl">
-          <input
-            type="text"
-            value={focusKeyword}
-            onChange={(e) => setFocusKeyword(e.target.value)}
-            placeholder="Optional focus keyword for presence checks"
-            className="w-full py-2.5 px-4 disabled:opacity-50"
-            disabled={loading}
-          />
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="relative">
+            <input
+              type="text"
+              value={focusKeyword}
+              onChange={(e) => setFocusKeyword(e.target.value)}
+              placeholder="Optional focus keyword for presence checks"
+              className="w-full py-2.5 px-4 disabled:opacity-50"
+              disabled={loading}
+            />
+          </div>
+          {crawlType === "fullsite" && (
+            <div className="relative">
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={maxPages}
+                onChange={(e) => setMaxPages(Math.max(1, Math.min(100, Number(e.target.value) || 25)))}
+                placeholder="Max pages to crawl"
+                className="w-full py-2.5 px-4 disabled:opacity-50"
+                disabled={loading}
+              />
+              <p className="mt-1 text-xs text-zinc-500">Maximum pages to audit (1-100)</p>
+            </div>
+          )}
         </div>
       </form>
 
@@ -235,6 +263,9 @@ function AuditContent() {
                 {result.pagesAudited && result.pagesAudited > 1 && (
                   <span> • {result.pagesAudited} pages audited</span>
                 )}
+                {result.crawlSource && result.pagesAudited && result.pagesAudited > 1 && (
+                  <span> • Crawl: {result.crawlSource === "sitemap" ? "sitemap" : "link discovery"}</span>
+                )}
               </p>
             </div>
             <button
@@ -250,6 +281,7 @@ function AuditContent() {
                       grade: result.grade,
                       issues: result.issues,
                       pagesAudited: result.pagesAudited ?? 1,
+                      technicalSummary: result.technicalSummary,
                     }),
                   });
                   const blob = await res.blob();
@@ -273,6 +305,80 @@ function AuditContent() {
               Export PDF
             </button>
           </div>
+
+          {result.technicalSummary && (
+            <div className="space-y-4">
+              <h3 className="font-heading text-lg font-semibold text-foreground">Technical & crawl summary</h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="panel p-4">
+                  <h4 className="text-sm font-semibold text-cyan-200">Crawl source</h4>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    {result.technicalSummary.crawlSource === "sitemap"
+                      ? "URLs discovered via sitemap.xml"
+                      : "URLs discovered via link crawling (no sitemap found)"}
+                  </p>
+                </div>
+                {result.technicalSummary.orphanPageUrls.length > 0 && (
+                  <div className="panel p-4">
+                    <h4 className="text-sm font-semibold text-amber-200">Orphan pages ({result.technicalSummary.orphanPageUrls.length})</h4>
+                    <p className="mt-1 text-xs text-zinc-500">Pages not linked from any other audited page</p>
+                    <ul className="mt-2 max-h-32 overflow-y-auto space-y-1 text-xs text-zinc-400">
+                      {result.technicalSummary.orphanPageUrls.slice(0, 15).map((u) => (
+                        <li key={u} className="truncate" title={u}>{u}</li>
+                      ))}
+                      {result.technicalSummary.orphanPageUrls.length > 15 && (
+                        <li className="text-zinc-500">+{result.technicalSummary.orphanPageUrls.length - 15} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                {result.technicalSummary.redirectChainExamples.length > 0 && (
+                  <div className="panel p-4 md:col-span-2">
+                    <h4 className="text-sm font-semibold text-amber-200">Redirect chain examples</h4>
+                    <ul className="mt-2 space-y-2 text-xs text-zinc-400">
+                      {result.technicalSummary.redirectChainExamples.map((chain, i) => (
+                        <li key={i} className="font-mono truncate" title={chain}>{chain}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {result.technicalSummary.duplicateTitleGroups.length > 0 && (
+                  <div className="panel p-4">
+                    <h4 className="text-sm font-semibold text-amber-200">Duplicate title tags</h4>
+                    <p className="mt-1 text-xs text-zinc-500">Same title used on multiple URLs</p>
+                    <ul className="mt-2 space-y-2 text-xs">
+                      {result.technicalSummary.duplicateTitleGroups.slice(0, 5).map((g, i) => (
+                        <li key={i}>
+                          <span className="text-foreground font-medium">"{g.title.slice(0, 50)}{g.title.length > 50 ? "…" : ""}"</span>
+                          <span className="text-zinc-500"> — {g.count} URLs</span>
+                        </li>
+                      ))}
+                      {result.technicalSummary.duplicateTitleGroups.length > 5 && (
+                        <li className="text-zinc-500">+{result.technicalSummary.duplicateTitleGroups.length - 5} more groups</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+                {result.technicalSummary.duplicateMetaGroups.length > 0 && (
+                  <div className="panel p-4">
+                    <h4 className="text-sm font-semibold text-amber-200">Duplicate meta descriptions</h4>
+                    <p className="mt-1 text-xs text-zinc-500">Same description on multiple URLs</p>
+                    <ul className="mt-2 space-y-2 text-xs">
+                      {result.technicalSummary.duplicateMetaGroups.slice(0, 5).map((g, i) => (
+                        <li key={i}>
+                          <span className="text-foreground">"{g.meta.slice(0, 40)}{g.meta.length > 40 ? "…" : ""}"</span>
+                          <span className="text-zinc-500"> — {g.count} URLs</span>
+                        </li>
+                      ))}
+                      {result.technicalSummary.duplicateMetaGroups.length > 5 && (
+                        <li className="text-zinc-500">+{result.technicalSummary.duplicateMetaGroups.length - 5} more groups</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {result.pageSpeed && (
             <div className="grid gap-4 md:grid-cols-2">

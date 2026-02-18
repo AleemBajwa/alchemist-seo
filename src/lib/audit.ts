@@ -485,6 +485,36 @@ export async function auditSinglePage(
       deductions += WEIGHTS.robotsTxtMissing;
     }
 
+    // Sitemap.xml check (fetch from same origin)
+    let sitemapFound = false;
+    const sitemapPaths = ["/sitemap.xml", "/sitemap_index.xml", "/sitemap-index.xml", "/sitemap/index.xml"];
+    for (const path of sitemapPaths) {
+      try {
+        const sitemapRes = await fetch(`${parsedUrl.origin}${path}`, {
+          headers: { "User-Agent": "Mozilla/5.0 (compatible; AlChemistSEO/1.0)" },
+        });
+        if (sitemapRes.ok) {
+          const text = await sitemapRes.text();
+          if (text.includes("<loc>") || text.includes("sitemap")) {
+            sitemapFound = true;
+            break;
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+    if (!sitemapFound) {
+      issues.push({
+        type: "info",
+        category: "Technical",
+        message: "No sitemap.xml found",
+        details: "Sitemap.xml helps search engines discover and index all pages efficiently.",
+        weight: WEIGHTS.sitemapMissing,
+      });
+      deductions += WEIGHTS.sitemapMissing;
+    }
+
     // Internal links count + crawl graph signal
     const hrefMatches = [...html.matchAll(/href=["']([^"']+)["']/gi)];
     const outgoingInternalLinks = new Set<string>();

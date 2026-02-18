@@ -2,169 +2,167 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// PostgreSQL for production (Neon, Supabase, etc.)
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id              String           @id @default(cuid())
-  clerkId         String           @unique
-  email           String
-  name            String?
+  id               String           @id @default(cuid())
+  clerkId          String           @unique
+  email            String
+  name             String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   stripeCustomerId String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  projects        Project[]
-  apiKeys         UserApiKey[]
-  auditRuns       AuditRun[]
-  whiteLabel      WhiteLabel?
-  subscription    Subscription?
-  domainSnapshots DomainSnapshot[]
-  apiKeysDev      ApiKey[]
+  apiKeysDev       ApiKey[]
+  auditRuns        AuditRun[]
+  domainSnapshots  DomainSnapshot[]
+  projects         Project[]
+  subscription     Subscription?
+  apiKeys          UserApiKey[]
+  whiteLabel       WhiteLabel?
 }
 
 model Subscription {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripePriceId     String?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  stripePriceId        String?
   stripeSubscriptionId String?
-  status            String   @default("inactive")
-  currentPeriodEnd  DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  status               String    @default("inactive")
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WhiteLabel {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  companyName String?
-  logoUrl     String?
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  companyName  String?
+  logoUrl      String?
   primaryColor String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserApiKey {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  provider    String
-  login       String?
-  password    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  userId    String
+  provider  String
+  login     String?
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, provider])
 }
 
 model Project {
-  id          String   @id @default(cuid())
-  name        String
-  domain      String
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  keywords    Keyword[]
-  keywordFolders KeywordFolder[]
-  auditRuns   AuditRun[]
+  id              String           @id @default(cuid())
+  name            String
+  domain          String
+  userId          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  auditRuns       AuditRun[]
+  keywords        Keyword[]
+  keywordFolders  KeywordFolder[]
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   trackedKeywords TrackedKeyword[]
 }
 
 model Keyword {
-  id          String   @id @default(cuid())
-  keyword     String
-  volume      Int?
-  difficulty  Int?
-  cpc         Float?
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  folderId    String?
-  folder      KeywordFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
+  id         String         @id @default(cuid())
+  keyword    String
+  volume     Int?
+  difficulty Int?
+  cpc        Float?
+  projectId  String
+  createdAt  DateTime       @default(now())
+  folderId   String?
+  folder     KeywordFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  project    Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model KeywordFolder {
-  id          String   @id @default(cuid())
-  name        String
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  keywords    Keyword[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String    @id @default(cuid())
+  name      String
+  projectId String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  keywords  Keyword[]
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, name])
 }
 
 model TrackedKeyword {
-  id             String           @id @default(cuid())
-  keyword        String
-  domain         String?
-  projectId      String
-  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  position       Int?
-  url            String?
-  lastChecked    DateTime?
-  createdAt      DateTime        @default(now())
+  id              String            @id @default(cuid())
+  keyword         String
+  projectId       String
+  position        Int?
+  url             String?
+  lastChecked     DateTime?
+  createdAt       DateTime          @default(now())
+  domain          String?
   positionHistory PositionHistory[]
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model PositionHistory {
   id               String         @id @default(cuid())
   trackedKeywordId String
-  trackedKeyword   TrackedKeyword @relation(fields: [trackedKeywordId], references: [id], onDelete: Cascade)
   position         Int?
   url              String?
   checkedAt        DateTime       @default(now())
+  trackedKeyword   TrackedKeyword @relation(fields: [trackedKeywordId], references: [id], onDelete: Cascade)
 }
 
 model AuditRun {
-  id          String   @id @default(cuid())
-  url         String
-  projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String
-  score       Int
-  grade       String
-  issues      String
-  pagesCount  Int?     @default(1)
-  crawlType   String?  @default("single")
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  url        String
+  projectId  String?
+  userId     String
+  status     String
+  score      Int
+  grade      String
+  issues     String
+  createdAt  DateTime @default(now())
+  pagesCount Int?     @default(1)
+  crawlType  String?  @default("single")
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DomainSnapshot {
-  id              String   @id @default(cuid())
-  domain          String
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  etv             Float?
-  keywordCount    Int?
-  rank            Int?
-  backlinks       Int?
+  id               String   @id @default(cuid())
+  domain           String
+  userId           String
+  etv              Float?
+  keywordCount     Int?
+  rank             Int?
+  backlinks        Int?
   referringDomains Int?
-  snapshotMonth   String
-  createdAt       DateTime @default(now())
+  snapshotMonth    String
+  createdAt        DateTime @default(now())
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([domain, userId, snapshotMonth])
   @@index([userId, domain])
 }
 
 model ApiKey {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  keyHash     String   @unique
-  keyPrefix   String
-  lastUsedAt  DateTime?
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  keyHash    String    @unique
+  keyPrefix  String
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([keyHash])
 }
-

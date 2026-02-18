@@ -44,17 +44,16 @@ export default async function DashboardPage() {
       <div className="hero-shell p-6 md:p-8">
         <div className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-fuchsia-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-cyan-300/20 blur-3xl" />
-        <span className="hero-kicker">Holographic SEO Command</span>
+        <span className="hero-kicker">Dashboard</span>
         <h1 className="hero-title mt-4 max-w-4xl">
-          Run your SEO workflow inside a cinematic, high-depth control interface.
+          SEO tools in one place.
         </h1>
         <p className="mt-3 max-w-3xl text-[1.02rem] text-zinc-600">
-          Projects, keyword intelligence, technical audits, and ranking movement in one immersive analytics deck.
+          Research keywords, run audits, track positions, and manage projects—powered by live data.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-2.5">
-          <span className="soft-badge">Live data · DataForSEO</span>
-          <span className="soft-badge">High-speed workflows</span>
-          <span className="soft-badge">Agency-ready</span>
+          <span className="soft-badge">DataForSEO</span>
+          <span className="soft-badge">Projects · Audits · Rankings</span>
         </div>
       </div>
 
