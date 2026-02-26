@@ -20,13 +20,14 @@ export async function GET() {
     version?: string;
   }>("/v3/dataforseo_labs/locations_and_languages");
 
-  const items: LocationItem[] | undefined =
+  const rawItems =
     result.data?.tasks?.[0]?.result ??
     (Array.isArray((result.data as Record<string, unknown>)?.result)
       ? (result.data as { result: LocationItem[] }).result
       : undefined);
+  const items: LocationItem[] = Array.isArray(rawItems) ? rawItems : [];
 
-  if (result.success && items.length) {
+  if (result.success && items.length > 0) {
     const countries = items
       .filter((r) => {
         const type = (r.location_type ?? "").toLowerCase();
