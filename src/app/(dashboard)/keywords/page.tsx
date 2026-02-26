@@ -41,7 +41,7 @@ type SuggestionPayload = {
   source: string;
 };
 
-const COUNTRY_OPTIONS = [
+const COUNTRY_OPTIONS_FALLBACK = [
   { value: "us", label: "United States" },
   { value: "uk", label: "United Kingdom" },
   { value: "ca", label: "Canada" },
@@ -107,6 +107,7 @@ function KeywordsContent() {
   const [hasDataForSeoKey, setHasDataForSeoKey] = useState<boolean | null>(null);
   const [country, setCountry] = useState("us");
   const [language, setLanguage] = useState("en");
+  const [countryOptions, setCountryOptions] = useState<{ value: string; label: string }[]>(COUNTRY_OPTIONS_FALLBACK);
   const [tagMap, setTagMap] = useState<Record<string, string[]>>({});
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
   const [activeTag, setActiveTag] = useState<string>("");
@@ -117,6 +118,17 @@ function KeywordsContent() {
     fetch("/api/projects")
       .then((r) => r.json())
       .then((d) => setProjects(d.projects || []));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/keywords/locations")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d?.locations) && d.locations.length > 0) {
+          setCountryOptions(d.locations.map((l: { value: string; label: string }) => ({ value: l.value, label: l.label })));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -391,7 +403,7 @@ function KeywordsContent() {
           className="min-w-44 py-2.5"
           aria-label="Select country"
         >
-          {COUNTRY_OPTIONS.map((option) => (
+          {countryOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { getCountryLocationCode } from "@/lib/countries";
 
 const schema = z.object({
   keyword: z.string().min(1).max(200).optional(),
@@ -22,32 +23,6 @@ const schema = z.object({
     )
     .optional(),
 });
-
-const COUNTRY_LOCATION_CODES: Record<string, number> = {
-  us: 2840,
-  uk: 2826,
-  ca: 2124,
-  au: 2036,
-  de: 2276,
-  fr: 2250,
-  it: 2380,
-  es: 2724,
-  nl: 2528,
-  se: 2518,
-  no: 2578,
-  dk: 2148,
-  pl: 2616,
-  br: 2076,
-  mx: 2514,
-  ar: 2032,
-  in: 2356,
-  jp: 2392,
-  kr: 2410,
-  sg: 2702,
-  ae: 2784,
-  za: 2710,
-  nz: 2554,
-};
 
 const LANGUAGE_CODES: Record<string, string> = {
   en: "en",
@@ -279,9 +254,7 @@ export async function POST(request: NextRequest) {
       backlinks: number | null;
     }> = [];
     if (!keywords.length && keyword) {
-      const locationCode =
-        COUNTRY_LOCATION_CODES[country.toLowerCase()] ??
-        COUNTRY_LOCATION_CODES.us;
+      const locationCode = getCountryLocationCode(country);
       const languageCode =
         LANGUAGE_CODES[language.toLowerCase()] ?? LANGUAGE_CODES.en;
 
@@ -419,9 +392,7 @@ export async function POST(request: NextRequest) {
     let autocompleteSuggestions: string[] = [];
     if (keyword) {
       try {
-        const locationCode =
-          COUNTRY_LOCATION_CODES[country.toLowerCase()] ??
-          COUNTRY_LOCATION_CODES.us;
+        const locationCode = getCountryLocationCode(country);
         const languageCode =
           LANGUAGE_CODES[language.toLowerCase()] ?? LANGUAGE_CODES.en;
         const suggestRes = await fetch(

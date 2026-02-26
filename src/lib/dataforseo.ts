@@ -50,3 +50,24 @@ export async function dataForSeoPost<T = unknown>(
   }
   return { success: true, data: json as T };
 }
+
+export async function dataForSeoGet<T = unknown>(
+  path: string
+): Promise<{ success: boolean; data?: T; error?: string }> {
+  const authHeader = buildDataForSeoAuthHeader();
+  if (!authHeader) {
+    return { success: false, error: "API_KEYS_REQUIRED" };
+  }
+  const res = await fetch(`https://api.dataforseo.com${path}`, {
+    method: "GET",
+    headers: { Authorization: authHeader },
+  });
+  const json = await res.json();
+  if (!res.ok || json?.status_code >= 40000) {
+    return {
+      success: false,
+      error: json?.status_message ?? "DataForSEO request failed",
+    };
+  }
+  return { success: true, data: json as T };
+}

@@ -83,7 +83,7 @@ model Keyword {
   projectId  String
   createdAt  DateTime       @default(now())
   folderId   String?
-  folder     KeywordFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  folder     KeywordFolder? @relation(fields: [folderId], references: [id])
   project    Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
@@ -133,7 +133,7 @@ model AuditRun {
   createdAt  DateTime @default(now())
   pagesCount Int?     @default(1)
   crawlType  String?  @default("single")
-  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project    Project? @relation(fields: [projectId], references: [id])
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
