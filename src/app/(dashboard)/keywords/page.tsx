@@ -210,16 +210,7 @@ function KeywordsContent() {
           setError(data.message || "DataForSEO is not configured by the account owner yet.");
           return;
         }
-        const rawMessage = String(data.message || data.error?.[0]?.message || "").trim();
-        const safeMessage =
-          rawMessage.toLowerCase() === "ok" || rawMessage.toLowerCase() === "ok."
-            ? "No keyword data was returned for this input. Try another keyword, country, or language."
-            : rawMessage || "Failed to fetch keywords";
-        throw new Error(safeMessage);
-      }
-      if (!Array.isArray(data?.data?.keywords) || data.data.keywords.length === 0) {
-        setError("No keyword data was returned for this input. Try another keyword, country, or language.");
-        return;
+        throw new Error(data.message || data.error?.[0]?.message || "Failed to fetch keywords");
       }
       setResults(data.data.keywords || []);
       setSerpRows(data.data.serpAnalysis || []);

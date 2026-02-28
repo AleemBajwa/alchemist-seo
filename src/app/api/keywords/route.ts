@@ -277,17 +277,11 @@ export async function POST(request: NextRequest) {
 
       const dfsJson = await dfsRes.json();
       if (!dfsRes.ok || dfsJson?.status_code >= 40000) {
-        const rawMessage =
-          typeof dfsJson?.status_message === "string" ? dfsJson.status_message.trim() : "";
-        const message =
-          rawMessage.toLowerCase() === "ok" || rawMessage.toLowerCase() === "ok."
-            ? "No keyword data returned for this input. Try a different keyword, country, or language."
-            : rawMessage || "DataForSEO keyword request failed";
         return NextResponse.json(
           {
             success: false,
             error: "API_ERROR",
-            message,
+            message: dfsJson?.status_message || "DataForSEO keyword request failed",
           },
           { status: 500 }
         );
