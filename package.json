@@ -16,7 +16,6 @@
     "@prisma/client": "^6",
     "@react-pdf/renderer": "^4.3.2",
     "clsx": "^2",
-    "google-auth-library": "^10.6.1",
     "lucide-react": "^0.475",
     "next": "16.1.6",
     "prisma": "^6",
