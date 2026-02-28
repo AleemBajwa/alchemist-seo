@@ -40,6 +40,7 @@ type SuggestionPayload = {
   autocomplete: string[];
   source: string;
 };
+type IntentType = "informational" | "navigational" | "commercial" | "transactional";
 
 const COUNTRY_OPTIONS_FALLBACK = [
   { value: "us", label: "United States" },
@@ -111,7 +112,8 @@ function KeywordsContent() {
   const [tagMap, setTagMap] = useState<Record<string, string[]>>({});
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
   const [activeTag, setActiveTag] = useState<string>("");
-  const [intentMap, setIntentMap] = useState<Record<string, "informational" | "navigational" | "commercial" | "transactional">>({});
+  const [intentMap, setIntentMap] = useState<Record<string, IntentType>>({});
+  const [activeIntent, setActiveIntent] = useState<"" | IntentType>("");
   const [intentLoading, setIntentLoading] = useState(false);
 
   useEffect(() => {
@@ -189,6 +191,7 @@ function KeywordsContent() {
     setKeywordClusters([]);
     setSuggestions(null);
     setIntentMap({});
+    setActiveIntent("");
 
     try {
       const res = await fetch("/api/keywords", {
@@ -315,7 +318,19 @@ function KeywordsContent() {
   const displayedResults = (results ?? []).filter((row) => {
     if (!activeTag) return true;
     return (tagMap[row.keyword] ?? []).includes(activeTag);
+  }).filter((row) => {
+    if (!activeIntent) return true;
+    return intentMap[row.keyword] === activeIntent;
   });
+
+  const intentCounts = (results ?? []).reduce<Record<IntentType, number>>(
+    (acc, row) => {
+      const intent = intentMap[row.keyword];
+      if (intent) acc[intent] += 1;
+      return acc;
+    },
+    { informational: 0, navigational: 0, commercial: 0, transactional: 0 }
+  );
 
   function addTag(keywordText: string, rawTag: string) {
     const tag = rawTag.trim().toLowerCase();
@@ -666,6 +681,31 @@ function KeywordsContent() {
               {intentLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               {intentLoading ? "Classifying..." : "AI Intent"}
             </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveIntent("")}
+                className={`rounded-full border px-2.5 py-1 text-xs ${
+                  !activeIntent ? "border-cyan-300 bg-cyan-500/15 text-cyan-100" : "border-[var(--border)] text-zinc-500"
+                }`}
+              >
+                All Intents
+              </button>
+              {(["informational", "navigational", "commercial", "transactional"] as IntentType[]).map((intent) => (
+                <button
+                  key={intent}
+                  type="button"
+                  onClick={() => setActiveIntent(intent)}
+                  className={`rounded-full border px-2.5 py-1 text-xs capitalize ${
+                    activeIntent === intent
+                      ? getIntentColor(intent)
+                      : "border-[var(--border)] text-zinc-500"
+                  }`}
+                >
+                  {intent} ({intentCounts[intent]})
+                </button>
+              ))}
+            </div>
             {projects.length > 0 && (
               <>
               <select
@@ -830,6 +870,47 @@ function KeywordsContent() {
             >
               <Download className="h-4 w-4" />
               Export Excel (.xlsx)
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const rows = displayedResults.map((r) => ({
+                    keyword: r.keyword,
+                    volume: r.volume,
+                    difficulty: r.difficulty,
+                    cpc: r.cpc,
+                    competition: r.competition,
+                    intent: intentMap[r.keyword] || "",
+                  }));
+                  const res = await fetch("/api/keywords/pdf", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      seedKeyword: keyword,
+                      country,
+                      language,
+                      rows,
+                      questionsCount: suggestionBuckets.questions.length,
+                    }),
+                  });
+                  if (!res.ok) throw new Error("Failed to export PDF");
+                  const blob = await res.blob();
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `keywords-${keyword.replace(/\s+/g, "-")}-${new Date()
+                    .toISOString()
+                    .slice(0, 10)}.pdf`;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : "Failed to export PDF");
+                }
+              }}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export PDF
             </button>
           </div>
           {selectedProjectId && (
