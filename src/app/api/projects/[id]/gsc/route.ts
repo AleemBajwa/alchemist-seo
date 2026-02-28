@@ -57,7 +57,7 @@ async function fetchEstimatedFallback(siteUrl: string, domain: string) {
     throw new Error(
       ranked.error === "API_KEYS_REQUIRED"
         ? "DataForSEO is not configured by the account owner yet."
-        : ranked.error || "Failed to build estimated fallback data"
+        : ranked.error || "Failed to build estimated fallback data."
     );
   }
 
@@ -231,20 +231,48 @@ export async function POST(
             position: r.position ?? 0,
           })),
           source: "gsc",
-          sourceNote: "",
+          sourceNote:
+            "Live Google Search Console data is connected for this property.",
         },
       });
     } catch (gscError) {
       const domain = toDomainFromSiteUrl(siteUrl, project.domain);
-      const estimated = await fetchEstimatedFallback(siteUrl, domain);
-      return NextResponse.json({
-        success: true,
-        data: {
-          projectName: project.name,
-          range: { startDate, endDate },
-          ...estimated,
-        },
-      });
+      try {
+        const estimated = await fetchEstimatedFallback(siteUrl, domain);
+        return NextResponse.json({
+          success: true,
+          data: {
+            projectName: project.name,
+            range: { startDate, endDate },
+            ...estimated,
+          },
+        });
+      } catch (fallbackError) {
+        const fallbackMessage =
+          fallbackError instanceof Error ? fallbackError.message : "Estimated fallback failed.";
+        return NextResponse.json({
+          success: true,
+          data: {
+            siteUrl,
+            projectName: project.name,
+            range: { startDate, endDate },
+            summary: {
+              totalClicks: 0,
+              totalImpressions: 0,
+              avgCtr: 0,
+              avgPosition: 0,
+            },
+            topQueries: [],
+            topPages: [],
+            countries: [],
+            devices: [],
+            source: "unavailable",
+            sourceNote:
+              `No data available for this domain right now. ${fallbackMessage} ` +
+              "For live GSC data, add the service account to this property in Search Console permissions.",
+          },
+        });
+      }
     }
   } catch (error) {
     return NextResponse.json(

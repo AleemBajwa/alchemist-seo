@@ -34,7 +34,7 @@ type GscData = {
   topPages: Array<{ page: string; clicks: number; impressions: number; ctr: number; position: number }>;
   countries: Array<{ country: string; clicks: number; impressions: number; ctr: number; position: number }>;
   devices: Array<{ device: string; clicks: number; impressions: number; ctr: number; position: number }>;
-  source?: "gsc" | "estimated";
+  source?: "gsc" | "estimated" | "unavailable";
   sourceNote?: string;
 };
 
@@ -262,6 +262,11 @@ export default function ProjectDetailPage() {
             {gscData.sourceNote || "Showing estimated data because direct Google Search Console access is unavailable for this property."}
           </div>
         )}
+        {gscData?.source === "unavailable" && (
+          <div className="mb-3 rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {gscData.sourceNote || "No data available for this domain yet."}
+          </div>
+        )}
         <div className="grid gap-3 md:grid-cols-4">
           <input
             value={gscSiteUrl}
@@ -345,25 +350,33 @@ export default function ProjectDetailPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl border border-[var(--border)] p-3">
                 <p className="mb-2 text-sm font-semibold text-foreground">Top Queries</p>
-                <div className="space-y-1">
-                  {gscData.topQueries.slice(0, 8).map((q) => (
-                    <div key={q.query} className="flex items-center justify-between text-xs">
-                      <span className="max-w-[70%] truncate text-zinc-500">{q.query}</span>
-                      <span className="text-foreground">{q.clicks.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
+                {gscData.topQueries.length === 0 ? (
+                  <p className="text-xs text-zinc-500">No query rows available.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {gscData.topQueries.slice(0, 8).map((q) => (
+                      <div key={q.query} className="flex items-center justify-between text-xs">
+                        <span className="max-w-[70%] truncate text-zinc-500">{q.query}</span>
+                        <span className="text-foreground">{q.clicks.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="rounded-xl border border-[var(--border)] p-3">
                 <p className="mb-2 text-sm font-semibold text-foreground">Top Pages</p>
-                <div className="space-y-1">
-                  {gscData.topPages.slice(0, 8).map((p) => (
-                    <div key={p.page} className="flex items-center justify-between text-xs">
-                      <span className="max-w-[70%] truncate text-zinc-500">{p.page}</span>
-                      <span className="text-foreground">{p.clicks.toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
+                {gscData.topPages.length === 0 ? (
+                  <p className="text-xs text-zinc-500">No page rows available.</p>
+                ) : (
+                  <div className="space-y-1">
+                    {gscData.topPages.slice(0, 8).map((p) => (
+                      <div key={p.page} className="flex items-center justify-between text-xs">
+                        <span className="max-w-[70%] truncate text-zinc-500">{p.page}</span>
+                        <span className="text-foreground">{p.clicks.toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
