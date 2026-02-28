@@ -34,8 +34,6 @@ type GscData = {
   topPages: Array<{ page: string; clicks: number; impressions: number; ctr: number; position: number }>;
   countries: Array<{ country: string; clicks: number; impressions: number; ctr: number; position: number }>;
   devices: Array<{ device: string; clicks: number; impressions: number; ctr: number; position: number }>;
-  source?: "gsc" | "estimated";
-  sourceNote?: string;
 };
 
 export default function ProjectDetailPage() {
@@ -257,11 +255,6 @@ export default function ProjectDetailPage() {
         <p className="mb-3 text-sm text-zinc-500">
           Fetch real Search Console data for this project (queries, pages, countries, devices).
         </p>
-        {gscData?.source === "estimated" && (
-          <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {gscData.sourceNote || "Showing estimated data because direct Google Search Console access is unavailable for this property."}
-          </div>
-        )}
         <div className="grid gap-3 md:grid-cols-4">
           <input
             value={gscSiteUrl}
@@ -326,11 +319,11 @@ export default function ProjectDetailPage() {
           <div className="mt-4 space-y-4">
             <div className="grid gap-3 md:grid-cols-4">
               <div className="rounded-xl border border-[var(--border)] bg-[#120b28] p-3">
-                <p className="text-xs text-zinc-500">{gscData.source === "estimated" ? "Estimated Clicks" : "Clicks"}</p>
+                <p className="text-xs text-zinc-500">Clicks</p>
                 <p className="font-heading text-xl text-foreground">{gscData.summary.totalClicks.toLocaleString()}</p>
               </div>
               <div className="rounded-xl border border-[var(--border)] bg-[#120b28] p-3">
-                <p className="text-xs text-zinc-500">{gscData.source === "estimated" ? "Estimated Impressions" : "Impressions"}</p>
+                <p className="text-xs text-zinc-500">Impressions</p>
                 <p className="font-heading text-xl text-foreground">{gscData.summary.totalImpressions.toLocaleString()}</p>
               </div>
               <div className="rounded-xl border border-[var(--border)] bg-[#120b28] p-3">
