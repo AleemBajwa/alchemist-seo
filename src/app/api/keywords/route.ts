@@ -276,12 +276,18 @@ export async function POST(request: NextRequest) {
       });
 
       const dfsJson = await dfsRes.json();
-      if (!dfsRes.ok || dfsJson?.status_code >= 40000) {
+      const taskStatusCode = Number(dfsJson?.tasks?.[0]?.status_code ?? 0);
+      const taskStatusMessage = String(dfsJson?.tasks?.[0]?.status_message ?? "").trim();
+      if (!dfsRes.ok || Number(dfsJson?.status_code ?? 0) >= 40000 || taskStatusCode >= 40000) {
+        const message =
+          taskStatusMessage.toLowerCase() === "ok" || taskStatusMessage.toLowerCase() === "ok."
+            ? "No keyword data was returned for this input. Try another keyword, country, or language."
+            : taskStatusMessage || dfsJson?.status_message || "DataForSEO keyword request failed";
         return NextResponse.json(
           {
             success: false,
             error: "API_ERROR",
-            message: dfsJson?.status_message || "DataForSEO keyword request failed",
+            message,
           },
           { status: 500 }
         );
@@ -291,6 +297,16 @@ export async function POST(request: NextRequest) {
         dfsJson?.tasks?.[0]?.result?.[0]?.items ??
         dfsJson?.tasks?.[0]?.result?.[0] ??
         [];
+      if (!Array.isArray(items) || items.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "NO_DATA",
+            message: "No keyword data was returned for this input. Try another keyword, country, or language.",
+          },
+          { status: 404 }
+        );
+      }
 
       keywords = (Array.isArray(items) ? items : []).map((item: any) => {
         const volume =

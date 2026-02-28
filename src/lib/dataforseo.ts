@@ -20,6 +20,27 @@ export function buildDataForSeoAuthHeader() {
   return null;
 }
 
+function normalizeDataForSeoError(json: any): string | null {
+  const topStatusCode = Number(json?.status_code ?? 0);
+  if (topStatusCode >= 40000) {
+    return String(json?.status_message || "DataForSEO request failed");
+  }
+
+  const firstTask = Array.isArray(json?.tasks) ? json.tasks[0] : null;
+  const taskStatusCode = Number(firstTask?.status_code ?? 0);
+  if (taskStatusCode >= 40000) {
+    const msg = String(firstTask?.status_message || json?.status_message || "DataForSEO task failed");
+    return msg.toLowerCase() === "ok" || msg.toLowerCase() === "ok."
+      ? "Data source returned no usable results for this request."
+      : msg;
+  }
+
+  if (json?.status_message && (String(json.status_message).toLowerCase() === "ok" || String(json.status_message).toLowerCase() === "ok.")) {
+    return null;
+  }
+  return null;
+}
+
 export async function dataForSeoPost<T = unknown>(
   path: string,
   body: unknown[]
@@ -42,10 +63,11 @@ export async function dataForSeoPost<T = unknown>(
   });
 
   const json = await res.json();
-  if (!res.ok || json?.status_code >= 40000) {
+  const normalizedError = normalizeDataForSeoError(json);
+  if (!res.ok || normalizedError) {
     return {
       success: false,
-      error: json?.status_message ?? "DataForSEO request failed",
+      error: normalizedError ?? String(json?.status_message || "DataForSEO request failed"),
     };
   }
   return { success: true, data: json as T };
@@ -63,10 +85,11 @@ export async function dataForSeoGet<T = unknown>(
     headers: { Authorization: authHeader },
   });
   const json = await res.json();
-  if (!res.ok || json?.status_code >= 40000) {
+  const normalizedError = normalizeDataForSeoError(json);
+  if (!res.ok || normalizedError) {
     return {
       success: false,
-      error: json?.status_message ?? "DataForSEO request failed",
+      error: normalizedError ?? String(json?.status_message || "DataForSEO request failed"),
     };
   }
   return { success: true, data: json as T };
