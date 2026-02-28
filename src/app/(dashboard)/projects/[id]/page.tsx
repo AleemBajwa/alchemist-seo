@@ -61,8 +61,7 @@ export default function ProjectDetailPage() {
 
   useEffect(() => {
     if (!project?.domain) return;
-    const normalized = project.domain.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-    setGscSiteUrl(`https://${normalized}/`);
+    setGscSiteUrl(`sc-domain:${project.domain.replace(/^https?:\/\//, "").replace(/\/+$/, "")}`);
   }, [project?.domain]);
 
   async function handleFetchGsc() {
