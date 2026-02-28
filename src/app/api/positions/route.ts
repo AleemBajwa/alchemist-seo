@@ -27,8 +27,10 @@ function buildDataForSeoAuthHeader({
     }
     return `Basic ${normalizedApiKey}`;
   }
-  if (login && password) {
-    return `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`;
+  const normalizedLogin = login?.trim();
+  const normalizedPassword = password?.trim();
+  if (normalizedLogin && normalizedPassword) {
+    return `Basic ${Buffer.from(`${normalizedLogin}:${normalizedPassword}`).toString("base64")}`;
   }
   return null;
 }

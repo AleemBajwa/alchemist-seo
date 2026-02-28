@@ -198,8 +198,10 @@ function buildDataForSeoAuthHeader({
     }
     return `Basic ${normalizedApiKey}`;
   }
-  if (login && password) {
-    return `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`;
+  const normalizedLogin = login?.trim();
+  const normalizedPassword = password?.trim();
+  if (normalizedLogin && normalizedPassword) {
+    return `Basic ${Buffer.from(`${normalizedLogin}:${normalizedPassword}`).toString("base64")}`;
   }
   return null;
 }
@@ -276,18 +278,12 @@ export async function POST(request: NextRequest) {
       });
 
       const dfsJson = await dfsRes.json();
-      const taskStatusCode = Number(dfsJson?.tasks?.[0]?.status_code ?? 0);
-      const taskStatusMessage = String(dfsJson?.tasks?.[0]?.status_message ?? "").trim();
-      if (!dfsRes.ok || Number(dfsJson?.status_code ?? 0) >= 40000 || taskStatusCode >= 40000) {
-        const message =
-          taskStatusMessage.toLowerCase() === "ok" || taskStatusMessage.toLowerCase() === "ok."
-            ? "No keyword data was returned for this input. Try another keyword, country, or language."
-            : taskStatusMessage || dfsJson?.status_message || "DataForSEO keyword request failed";
+      if (!dfsRes.ok || dfsJson?.status_code >= 40000) {
         return NextResponse.json(
           {
             success: false,
             error: "API_ERROR",
-            message,
+            message: dfsJson?.status_message || "DataForSEO keyword request failed",
           },
           { status: 500 }
         );
@@ -297,16 +293,6 @@ export async function POST(request: NextRequest) {
         dfsJson?.tasks?.[0]?.result?.[0]?.items ??
         dfsJson?.tasks?.[0]?.result?.[0] ??
         [];
-      if (!Array.isArray(items) || items.length === 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "NO_DATA",
-            message: "No keyword data was returned for this input. Try another keyword, country, or language.",
-          },
-          { status: 404 }
-        );
-      }
 
       keywords = (Array.isArray(items) ? items : []).map((item: any) => {
         const volume =
