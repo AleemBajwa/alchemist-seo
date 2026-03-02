@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, Loader2, TrendingUp, DollarSign, Save, Download, Sparkles } from "lucide-react";
+import { Search, Loader2, TrendingUp, DollarSign, Save, Download, Sparkles, FileDown } from "lucide-react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import * as XLSX from "xlsx";
 
@@ -87,6 +87,14 @@ const LANGUAGE_OPTIONS = [
   { value: "da", label: "Danish" },
 ];
 
+const INTENT_FILTER_OPTIONS = [
+  { value: "", label: "All intents" },
+  { value: "informational", label: "Informational" },
+  { value: "navigational", label: "Navigational" },
+  { value: "commercial", label: "Commercial" },
+  { value: "transactional", label: "Transactional" },
+] as const;
+
 function KeywordsContent() {
   const searchParams = useSearchParams();
   const projectIdParam = searchParams.get("projectId");
@@ -112,7 +120,9 @@ function KeywordsContent() {
   const [tagDrafts, setTagDrafts] = useState<Record<string, string>>({});
   const [activeTag, setActiveTag] = useState<string>("");
   const [intentMap, setIntentMap] = useState<Record<string, "informational" | "navigational" | "commercial" | "transactional">>({});
+  const [activeIntent, setActiveIntent] = useState<"" | "informational" | "navigational" | "commercial" | "transactional">("");
   const [intentLoading, setIntentLoading] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/projects")
@@ -189,6 +199,7 @@ function KeywordsContent() {
     setKeywordClusters([]);
     setSuggestions(null);
     setIntentMap({});
+    setActiveIntent("");
 
     try {
       const res = await fetch("/api/keywords", {
@@ -313,8 +324,10 @@ function KeywordsContent() {
 
   const allTags = [...new Set(Object.values(tagMap).flat())].slice(0, 40);
   const displayedResults = (results ?? []).filter((row) => {
-    if (!activeTag) return true;
-    return (tagMap[row.keyword] ?? []).includes(activeTag);
+    const matchesTag = !activeTag || (tagMap[row.keyword] ?? []).includes(activeTag);
+    const rowIntent = intentMap[row.keyword];
+    const matchesIntent = !activeIntent || rowIntent === activeIntent;
+    return matchesTag && matchesIntent;
   });
 
   function addTag(keywordText: string, rawTag: string) {
@@ -520,7 +533,7 @@ function KeywordsContent() {
               description={`${suggestionBuckets.longTail.length} keywords with 4+ words`}
             />
             <SuggestionCard 
-              title="Question Keywords" 
+              title="Question Suggestions" 
               items={suggestionBuckets.questions}
               description={`${suggestionBuckets.questions.length} question-based queries`}
             />
@@ -656,6 +669,31 @@ function KeywordsContent() {
             </div>
           </div>
 
+          <div className="panel p-4">
+            <h3 className="font-heading text-base font-semibold text-foreground">Keyword Intent Filter</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {INTENT_FILTER_OPTIONS.map((opt) => (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => setActiveIntent(opt.value)}
+                  className={`rounded-full border px-2.5 py-1 text-xs ${
+                    activeIntent === opt.value
+                      ? "border-cyan-300 bg-cyan-500/15 text-cyan-100"
+                      : "border-[var(--border)] text-zinc-500"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {activeIntent && Object.keys(intentMap).length === 0 && (
+              <p className="mt-2 text-xs text-zinc-500">
+                Run <span className="font-semibold text-zinc-300">AI Intent</span> first to classify keywords, then filter by intent.
+              </p>
+            )}
+          </div>
+
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
@@ -720,6 +758,49 @@ function KeywordsContent() {
             >
               <Download className="h-4 w-4" />
               Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!results.length || pdfLoading) return;
+                setPdfLoading(true);
+                try {
+                  const res = await fetch("/api/keywords/pdf", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      seedKeyword: keyword,
+                      filters: { country, language },
+                      keywords: results.map((r) => ({
+                        keyword: r.keyword,
+                        volume: r.volume,
+                        difficulty: r.difficulty,
+                        cpc: Number(r.cpc.toFixed(2)),
+                        competition: Math.round((r.competition ?? 0) * 100),
+                        intent: intentMap[r.keyword] || "",
+                        tags: (tagMap[r.keyword] ?? []).join(", "),
+                      })),
+                      questions: suggestionBuckets.questions.slice(0, 25).map((q) => q.keyword),
+                    }),
+                  });
+                  if (!res.ok) throw new Error("PDF export failed");
+                  const blob = await res.blob();
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = `keywords-${keyword.replace(/\s+/g, "-")}-${new Date().toISOString().slice(0, 10)}.pdf`;
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                } catch {
+                  setError("Could not generate PDF export. Please try again.");
+                } finally {
+                  setPdfLoading(false);
+                }
+              }}
+              disabled={!results.length || pdfLoading}
+              className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+            >
+              {pdfLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+              {pdfLoading ? "Exporting PDF..." : "Export PDF"}
             </button>
             <button
               type="button"

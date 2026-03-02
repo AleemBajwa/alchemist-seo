@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Search, FileSearch, Loader2, BarChart3 } from "lucide-react";
+import { ArrowLeft, Search, FileSearch, Loader2, BarChart3, Link as LinkIcon, RefreshCw } from "lucide-react";
 
 type Project = {
   id: string;
@@ -26,11 +26,40 @@ type Project = {
   }[];
 };
 
+type GscMetricRow = {
+  key: string;
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+};
+
+type GscData = {
+  projectId: string;
+  projectName: string;
+  projectDomain: string;
+  property?: string;
+  startDate?: string;
+  endDate?: string;
+  summary?: { clicks: number; impressions: number; ctr: number; position: number };
+  manualOverride?: boolean;
+  topQueries?: GscMetricRow[];
+  topPages?: GscMetricRow[];
+  countries?: GscMetricRow[];
+  devices?: GscMetricRow[];
+  availableProperties?: string[];
+  message?: string;
+};
+
 export default function ProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [gscLoading, setGscLoading] = useState(false);
+  const [gscError, setGscError] = useState<string | null>(null);
+  const [gscData, setGscData] = useState<GscData | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState("");
 
   useEffect(() => {
     fetch(`/api/projects/${params.id}`)
@@ -39,6 +68,28 @@ export default function ProjectDetailPage() {
       .catch(() => setProject(null))
       .finally(() => setLoading(false));
   }, [params.id]);
+
+  async function fetchGsc(property?: string) {
+    if (!project) return;
+    setGscLoading(true);
+    setGscError(null);
+    try {
+      const q = property ? `?property=${encodeURIComponent(property)}` : "";
+      const res = await fetch(`/api/projects/${project.id}/gsc${q}`);
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch Search Console data");
+      }
+      setGscData(data.data);
+      const firstProperty = data.data?.property || data.data?.availableProperties?.[0] || "";
+      setSelectedProperty(firstProperty);
+    } catch (e) {
+      setGscError(e instanceof Error ? e.message : "Failed to fetch Search Console data");
+      setGscData(null);
+    } finally {
+      setGscLoading(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -186,6 +237,118 @@ export default function ProjectDetailPage() {
           </div>
         </div>
       )}
+
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-[var(--shadow-sm)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-heading text-lg font-semibold text-foreground">Google Search Console</h3>
+            <p className="text-sm text-zinc-500">
+              Fetch clicks, impressions, CTR, position, and top queries/pages for this project domain.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => fetchGsc(selectedProperty || undefined)}
+            disabled={gscLoading}
+            className="btn-secondary flex items-center gap-2 disabled:opacity-50"
+          >
+            {gscLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            {gscLoading ? "Fetching..." : "Fetch GSC Data"}
+          </button>
+        </div>
+
+        {!!gscData?.availableProperties?.length && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <LinkIcon className="h-4 w-4 text-zinc-500" />
+            <select
+              value={selectedProperty}
+              onChange={(e) => setSelectedProperty(e.target.value)}
+              className="min-w-[320px] max-w-full rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm text-foreground"
+              aria-label="Select GSC property"
+            >
+              {gscData.availableProperties.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => fetchGsc(selectedProperty)}
+              disabled={!selectedProperty || gscLoading}
+              className="btn-secondary disabled:opacity-50"
+            >
+              Use Property
+            </button>
+          </div>
+        )}
+
+        {gscError && (
+          <div className="mt-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {gscError}
+          </div>
+        )}
+
+        {gscData?.message && !gscData.summary && (
+          <div className="mt-4 rounded-xl border border-cyan-300/40 bg-cyan-500/10 px-4 py-3 text-sm text-cyan-100">
+            {gscData.message}
+          </div>
+        )}
+
+        {gscData?.summary && (
+          <>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Stat label="Clicks" value={gscData.summary.clicks.toLocaleString()} />
+              <Stat label="Impressions" value={gscData.summary.impressions.toLocaleString()} />
+              <Stat label="CTR" value={`${(gscData.summary.ctr * 100).toFixed(2)}%`} />
+              <Stat label="Avg Position" value={gscData.summary.position.toFixed(2)} />
+            </div>
+
+            <div className="mt-4 text-xs text-zinc-500">
+              Property: <span className="text-zinc-300">{gscData.property}</span> • Range:{" "}
+              {gscData.startDate} to {gscData.endDate}
+            </div>
+            {gscData.manualOverride && (
+              <div className="mt-2 rounded-lg border border-cyan-300/40 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-100">
+                Using selected property (manual override).
+              </div>
+            )}
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+              <MiniTable title="Top Queries" rows={gscData.topQueries ?? []} />
+              <MiniTable title="Top Pages" rows={gscData.topPages ?? []} />
+              <MiniTable title="Countries" rows={gscData.countries ?? []} />
+              <MiniTable title="Devices" rows={gscData.devices ?? []} />
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[#120b28]/75 p-3">
+      <p className="text-xs uppercase tracking-widest text-zinc-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function MiniTable({ title, rows }: { title: string; rows: GscMetricRow[] }) {
+  return (
+    <div className="rounded-xl border border-[var(--border)] bg-[#120b28]/75 p-3">
+      <p className="text-sm font-semibold text-cyan-100">{title}</p>
+      <div className="mt-2 space-y-1.5">
+        {rows.length === 0 && <p className="text-xs text-zinc-500">No data</p>}
+        {rows.slice(0, 8).map((r) => (
+          <div key={`${title}-${r.key}`} className="flex items-center justify-between gap-3 text-xs">
+            <span className="truncate text-zinc-300">{r.key || "—"}</span>
+            <span className="shrink-0 text-zinc-500">{r.clicks.toLocaleString()} clicks</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
